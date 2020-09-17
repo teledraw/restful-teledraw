@@ -25,3 +25,15 @@ class BasicsTestCase(unittest.TestCase):
     def test_cannotJoinWithoutAUsername(self):
         response = self.app.post('/join', data={'username': ''})
         self.assertEqual(response.status_code, 400)
+
+    def test_canJoinAndAskGameForNextStep(self):
+        self.app.post('/join', data={'username': 'Mikey'})
+        response = self.app.get('/status?username=Mikey')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, b"SUBMIT_INITIAL_PHRASE")
+
+    ##Error case test
+    #def test_getNextStepSays400IfYouHaveNotJoined(self):
+    #    response = self.app.get('/status?username=Mikey')
+    #    self.assertEqual(response.status_code, 400)
+

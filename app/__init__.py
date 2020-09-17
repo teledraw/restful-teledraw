@@ -3,6 +3,8 @@ from flask import Flask
 from flask import request
 
 
+_users = list()
+
 def create_app():
     app = Flask(__name__)
 
@@ -14,12 +16,20 @@ def create_app():
     @app.route('/join', methods=['POST'])
     def join_game():
         if checkUsernameExists(request):
+            _users.append(request.form.get('username'))
             return '', 200
         return '', 400
 
 
+    @app.route('/status', methods=['GET'])
+    def get_status_for_player():
+        if request.args['username'] in _users:
+            return "SUBMIT_INITIAL_PHRASE", 200
+        return '', 400
+
+
     def checkUsernameExists(_request):
-        return (_request.form.get('name') is not None and _request.form.get('name') != '')
+        return (_request.form.get('username') is not None and _request.form.get('username') != '')
 
 
     # enable flask test command
