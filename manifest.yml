@@ -1,0 +1,8 @@
+---
+applications:
+  - name: fordlabs-artika
+    domain: 
+    host: 
+    env:
+      http_proxy: http://internet.ford.com:83
+      https_proxy: http://internet.ford.com:83
