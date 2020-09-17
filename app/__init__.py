@@ -1,6 +1,7 @@
 import click
 from flask import Flask
 from flask import request
+from flask import jsonify
 
 
 _userStatuses = {}
@@ -26,7 +27,11 @@ def create_app():
     @app.route('/status', methods=['GET'])
     def get_status_for_player():
         if request.args['username'] in _userStatuses.keys():
-            return _userStatuses[request.args['username']], 200
+            statusForUser = _userStatuses[request.args['username']]
+            if(statusForUser == 'SUBMIT_IMAGE'):
+                prompt = getPhrasePrompt(request.args['username'])
+                return jsonify({'description': statusForUser, 'prompt': prompt}), 200
+            return jsonify({'description': statusForUser}), 200
         return '', 400
 
     @app.route('/phrase', methods=['POST'])
@@ -57,6 +62,12 @@ def create_app():
             _phrases[username] = [phrase]
         else:
             _phrases[username].append(phrase)
+
+    def getPhrasePrompt(username):
+        users = list(_userStatuses.keys())
+        indexOfUser = users.index(username)
+        usernameOfPhraseSource = users[(indexOfUser + 1) % len(users)]
+        return _phrases[usernameOfPhraseSource][-1]
 
     # enable flask test command
     # specify the test location for test discovery

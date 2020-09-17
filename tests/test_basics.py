@@ -9,10 +9,10 @@ class BasicsTestCase(unittest.TestCase):
         # propagate the exceptions to the test client
         self.app.testing = True
 
-    def assertStatus(self, statusCode=200, statusMessage=b"", username=""):
+    def assertStatusDescription(self, statusCode=200, statusMessage="", username=""):
        response = self.app.get('/status?username=' + username)
        self.assertEqual(response.status_code, statusCode)
-       self.assertEqual(response.data, statusMessage)
+       self.assertEqual(response.get_json()['description'], statusMessage)
 
     def test_helloWorldEndpoint(self):
         response = self.app.get('/')
@@ -33,9 +33,7 @@ class BasicsTestCase(unittest.TestCase):
 
     def test_canJoinAndAskGameForNextStep(self):
         self.app.post('/join', data={'username': 'Mikey'})
-        response = self.app.get('/status?username=Mikey')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data, b"SUBMIT_INITIAL_PHRASE")
+        self.assertStatusDescription(200, "SUBMIT_INITIAL_PHRASE", "Mikey")
 
     ##Error case test
     # def test_getNextStepSays400IfYouHaveNotJoined(self):
@@ -48,7 +46,7 @@ class BasicsTestCase(unittest.TestCase):
         response = self.app.post('/phrase', data={'username': 'Mikey',
                                                   'phrase': 'Ever dance with the devil in the pale moonlight?'})
         self.assertEqual(response.status_code, 200)
-        self.assertStatus(200, b"WAIT", "Mikey")
+        self.assertStatusDescription(200, "WAIT", "Mikey")
 
     def test_promptForImageAfterAllPlayersSubmitInitialPhrase(self):
         self.app.post('/join', data={'username': 'Mikey'})
@@ -58,6 +56,18 @@ class BasicsTestCase(unittest.TestCase):
         self.app.post('/phrase', data={'username': 'NotMikey',
                                                   'phrase': 'The devil went down to Georgia.'})
 
-        self.assertStatus(200, b"SUBMIT_IMAGE", "Mikey")
-        self.assertStatus(200, b"SUBMIT_IMAGE", "NotMikey")
+        self.assertStatusDescription(200, "SUBMIT_IMAGE", "Mikey")
+        self.assertStatusDescription(200, "SUBMIT_IMAGE", "NotMikey")
 
+    def test_imagePromptsIncludeProperPhrase(self):
+        self.app.post('/join', data={'username': 'Mikey'})
+        self.app.post('/join', data={'username': 'NotMikey'})
+        self.app.post('/phrase', data={'username': 'Mikey',
+                                                  'phrase': 'Ever dance with the devil in the pale moonlight?'})
+        self.app.post('/phrase', data={'username': 'NotMikey',
+                                                  'phrase': 'The devil went down to Georgia.'})
+
+        response = self.app.get('/status?username=' + 'Mikey')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()['description'], "SUBMIT_IMAGE")
+        self.assertEqual(response.get_json()['prompt'], 'The devil went down to Georgia.')
