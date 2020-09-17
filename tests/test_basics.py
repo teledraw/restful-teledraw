@@ -49,3 +49,15 @@ class BasicsTestCase(unittest.TestCase):
                                                   'phrase': 'Ever dance with the devil in the pale moonlight?'})
         self.assertEqual(response.status_code, 200)
         self.assertStatus(200, b"WAIT", "Mikey")
+
+    def test_promptForImageAfterAllPlayersSubmitInitialPhrase(self):
+        self.app.post('/join', data={'username': 'Mikey'})
+        self.app.post('/join', data={'username': 'NotMikey'})
+        self.app.post('/phrase', data={'username': 'Mikey',
+                                                  'phrase': 'Ever dance with the devil in the pale moonlight?'})
+        self.app.post('/phrase', data={'username': 'NotMikey',
+                                                  'phrase': 'The devil went down to Georgia.'})
+
+        self.assertStatus(200, b"SUBMIT_IMAGE", "Mikey")
+        self.assertStatus(200, b"SUBMIT_IMAGE", "NotMikey")
+

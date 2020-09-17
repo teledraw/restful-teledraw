@@ -4,6 +4,7 @@ from flask import request
 
 
 _userStatuses = {}
+# SUBMIT_INITIAL_PHRASE, SUBMIT_IMAGE, WAIT
 _phrases = {}
 
 def create_app():
@@ -31,8 +32,12 @@ def create_app():
     @app.route('/phrase', methods=['POST'])
     def submit_phrase():
         if request.form.get('username') in _userStatuses.keys() and (_userStatuses[request.form.get('username')] in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]):
-            savePhrase(request.form.get('username'), request.form.ge('phrase'))
+            savePhrase(request.form.get('username'), request.form.get('phrase'))
             _userStatuses[request.form.get('username')] = "WAIT"
+
+            if all(status == 'WAIT' for status in _userStatuses.values()):
+                for user in _userStatuses.keys():
+                    _userStatuses[user] = 'SUBMIT_IMAGE'
             return '', 200
         return '', 400
 
@@ -48,7 +53,7 @@ def create_app():
             return "ERROR_USER_NOT_JOINED"
 
     def savePhrase(username, phrase):
-        if(_phrases[username] is None):
+        if(username not in _phrases.keys()):
             _phrases[username] = [phrase]
         else:
             _phrases[username].append(phrase)
