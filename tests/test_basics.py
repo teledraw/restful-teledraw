@@ -13,3 +13,15 @@ class BasicsTestCase(unittest.TestCase):
         response = self.app.get('/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.decode('utf-8'), 'Hello World!')
+
+    def test_canJoinByPostingUsername(self):
+        response = self.app.post('/join', data={'username': 'Mikey'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_canJoinByPostingUsername(self):
+        response = self.app.get('/join')
+        self.assertEqual(response.status_code, 405)
+
+    def test_cannotJoinWithoutAUsername(self):
+        response = self.app.post('/join', data={'username': ''})
+        self.assertEqual(response.status_code, 400)
