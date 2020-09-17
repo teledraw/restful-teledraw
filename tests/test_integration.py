@@ -2,7 +2,7 @@ import unittest
 from flask import current_app
 
 
-class MikeyNotMikeyTestCase(unittest.TestCase):
+class IntegrationTests(unittest.TestCase):
     def setUp(self):
         # creates a test client
         self.app = current_app.test_client()
