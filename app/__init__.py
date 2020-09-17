@@ -3,7 +3,8 @@ from flask import Flask
 from flask import request
 
 
-_users = list()
+_userStatuses = {}
+_phrases = {}
 
 def create_app():
     app = Flask(__name__)
@@ -16,21 +17,41 @@ def create_app():
     @app.route('/join', methods=['POST'])
     def join_game():
         if checkUsernameExists(request):
-            _users.append(request.form.get('username'))
+            _userStatuses[request.form.get('username')] = 'SUBMIT_INITIAL_PHRASE'
             return '', 200
         return '', 400
 
 
     @app.route('/status', methods=['GET'])
     def get_status_for_player():
-        if request.args['username'] in _users:
-            return "SUBMIT_INITIAL_PHRASE", 200
+        if request.args['username'] in _userStatuses.keys():
+            return _userStatuses[request.args['username']], 200
+        return '', 400
+
+    @app.route('/phrase', methods=['POST'])
+    def submit_phrase():
+        if request.form.get('username') in _userStatuses.keys() and (_userStatuses[request.form.get('username')] in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]):
+            savePhrase(request.form.get('username'), request.form.ge('phrase'))
+            _userStatuses[request.form.get('username')] = "WAIT"
+            return '', 200
         return '', 400
 
 
     def checkUsernameExists(_request):
         return (_request.form.get('username') is not None and _request.form.get('username') != '')
 
+
+    def checkStatusForPlayer(username):
+        if(username in _userStatuses.keys()):
+            return _userStatuses[username]
+        else:
+            return "ERROR_USER_NOT_JOINED"
+
+    def savePhrase(username, phrase):
+        if(_phrases[username] is None):
+            _phrases[username] = [phrase]
+        else:
+            _phrases[username].append(phrase)
 
     # enable flask test command
     # specify the test location for test discovery
