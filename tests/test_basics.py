@@ -79,14 +79,25 @@ class MikeyNotMikeyTestCase(unittest.TestCase):
         self.assertEqual(response.get_json()['prompt'], 'The devil went down to Georgia.')
 
     def test_phrasePromptsIncludeProperImage(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.addImagesForKirkAndSpock()
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        self.addImagesForKirkBonesAndSpock()
 
         response = self.app.get('/status?username=' + 'Kirk')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['description'], "SUBMIT_PHRASE")
         self.assertEqual(response.get_json()['prompt'], 'spock image')
+
+    def test_statusIsGameOverAfterOneSubmissionPerPlayer(self):
+        self.addKirkAndSpock()
+        self.addPhrasesForKirkAndSpock()
+        self.addImagesForKirkAndSpock()
+
+
+        response = self.app.get('/status?username=' + 'Kirk')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()['description'], 'GAME_OVER')
+
 
 
 
@@ -94,6 +105,9 @@ class MikeyNotMikeyTestCase(unittest.TestCase):
         self.app.post('/join', data={'username': 'Kirk'})
         self.app.post('/join', data={'username': 'Spock'})
 
+    def addKirkBonesAndSpock(self):
+        self.addKirkAndSpock()
+        self.app.post('/join', data={'username': 'Bones'})
 
     def addPhrasesForKirkAndSpock(self):
         self.app.post('/phrase', data={'username': 'Kirk',
@@ -101,8 +115,18 @@ class MikeyNotMikeyTestCase(unittest.TestCase):
         self.app.post('/phrase', data={'username': 'Spock',
                                        'phrase': 'The devil went down to Georgia.'})
 
+    def addPhrasesForKirkBonesAndSpock(self):
+        self.addPhrasesForKirkAndSpock()
+        self.app.post('/phrase', data={'username': 'Bones',
+                                       'phrase': 'That is devilishly clever.'})
+
     def addImagesForKirkAndSpock(self):
         self.app.post('/image', data={'username': 'Kirk',
                                        'image': 'kirk image'})
         self.app.post('/image', data={'username': 'Spock',
                                        'image': 'spock image'})
+
+    def addImagesForKirkBonesAndSpock(self):
+        self.addImagesForKirkAndSpock()
+        self.app.post('/image', data={'username': 'Bones',
+                                      'image': 'bones image'})

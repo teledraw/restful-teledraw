@@ -10,6 +10,13 @@ _phrases = {}
 _images = {}
 
 
+def gameOver():
+    number_of_users = len (_userStatuses.keys())
+    for user in _userStatuses.keys():
+        if user not in _phrases.keys() or user not in _images.keys() or len(_phrases[user]) + len(_images[user]) != number_of_users:
+            return False
+    return True
+
 def create_app():
     app = Flask(__name__)
 
@@ -28,7 +35,6 @@ def create_app():
 
     @app.route('/status', methods=['GET'])
     def get_status_for_player():
-        #print('PLAYERS: ' + str(_userStatuses.keys()))
         if request.args['username'] in _userStatuses.keys():
             statusForUser = _userStatuses[request.args['username']]
             if(statusForUser == 'SUBMIT_IMAGE'):
@@ -47,8 +53,12 @@ def create_app():
             _userStatuses[request.form.get('username')] = "WAIT"
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
+                next_status = 'SUBMIT_IMAGE'
+                if gameOver():
+                    next_status = 'GAME_OVER'
+
                 for user in _userStatuses.keys():
-                    _userStatuses[user] = 'SUBMIT_IMAGE'
+                    _userStatuses[user] = next_status
             return '', 200
         return '', 400
 
@@ -59,9 +69,11 @@ def create_app():
             _userStatuses[request.form.get('username')] = "WAIT"
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
-                #print('setting status to phrase')
+                next_status = 'SUBMIT_PHRASE'
+                if gameOver():
+                    next_status = 'GAME_OVER'
                 for user in _userStatuses.keys():
-                    _userStatuses[user] = 'SUBMIT_PHRASE'
+                    _userStatuses[user] = next_status
             return '', 200
         return '', 400
 
