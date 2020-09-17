@@ -7,6 +7,8 @@ from flask import jsonify
 _userStatuses = {}
 # SUBMIT_INITIAL_PHRASE, SUBMIT_IMAGE, WAIT
 _phrases = {}
+_images = {}
+
 
 def create_app():
     app = Flask(__name__)
@@ -26,10 +28,14 @@ def create_app():
 
     @app.route('/status', methods=['GET'])
     def get_status_for_player():
+        #print('PLAYERS: ' + str(_userStatuses.keys()))
         if request.args['username'] in _userStatuses.keys():
             statusForUser = _userStatuses[request.args['username']]
             if(statusForUser == 'SUBMIT_IMAGE'):
                 prompt = getPhrasePrompt(request.args['username'])
+                return jsonify({'description': statusForUser, 'prompt': prompt}), 200
+            if(statusForUser == 'SUBMIT_PHRASE'):
+                prompt = getImagePrompt(request.args['username'])
                 return jsonify({'description': statusForUser, 'prompt': prompt}), 200
             return jsonify({'description': statusForUser}), 200
         return '', 400
@@ -45,6 +51,26 @@ def create_app():
                     _userStatuses[user] = 'SUBMIT_IMAGE'
             return '', 200
         return '', 400
+
+    @app.route('/image', methods=['POST'])
+    def submit_image():
+        if request.form.get('username') in _userStatuses.keys() and (_userStatuses[request.form.get('username')] == "SUBMIT_IMAGE"):
+            saveImage(request.form.get('username'), request.form.get('image'))
+            _userStatuses[request.form.get('username')] = "WAIT"
+
+            if all(status == 'WAIT' for status in _userStatuses.values()):
+                #print('setting status to phrase')
+                for user in _userStatuses.keys():
+                    _userStatuses[user] = 'SUBMIT_PHRASE'
+            return '', 200
+        return '', 400
+
+    @app.route('/restart', methods=['POST'])
+    def restart_game():
+        _userStatuses.clear()
+        _phrases.clear()
+        _images.clear()
+        return '', 200
 
 
     def checkUsernameExists(_request):
@@ -68,6 +94,18 @@ def create_app():
         indexOfUser = users.index(username)
         usernameOfPhraseSource = users[(indexOfUser + 1) % len(users)]
         return _phrases[usernameOfPhraseSource][-1]
+
+    def saveImage(username, image):
+        if(username not in _images.keys()):
+            _images[username] = [image]
+        else:
+            _images[username].append(image)
+
+    def getImagePrompt(username):
+        users = list(_userStatuses.keys())
+        indexOfUser = users.index(username)
+        usernameOfImageSource = users[(indexOfUser + 1) % len(users)]
+        return _images[usernameOfImageSource][-1]
 
     # enable flask test command
     # specify the test location for test discovery
