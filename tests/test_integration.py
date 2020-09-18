@@ -51,23 +51,17 @@ class IntegrationTests(unittest.TestCase):
     #    self.assertEqual(response.status_code, 400)
 
     def test_canPostInitialPhrase(self):
-        self.app.post('/join', data={'username': 'Mikey'})
-        self.app.post('/join', data={'username': 'NotMikey'})
-        response = self.app.post('/phrase', data={'username': 'Mikey',
+        self.addKirkAndSpock()
+        response = self.app.post('/phrase', data={'username': 'Kirk',
                                                   'phrase': 'Ever dance with the devil in the pale moonlight?'})
         self.assertEqual(response.status_code, 200)
-        self.assertStatusDescription(200, "WAIT", "Mikey")
+        self.assertStatusDescription(200, "WAIT", "Kirk")
 
     def test_promptForImageAfterAllPlayersSubmitInitialPhrase(self):
-        self.app.post('/join', data={'username': 'Mikey'})
-        self.app.post('/join', data={'username': 'NotMikey'})
-        self.app.post('/phrase', data={'username': 'Mikey',
-                                       'phrase': 'Ever dance with the devil in the pale moonlight?'})
-        self.app.post('/phrase', data={'username': 'NotMikey',
-                                       'phrase': 'The devil went down to Georgia.'})
-
-        self.assertStatusDescription(200, "SUBMIT_IMAGE", "Mikey")
-        self.assertStatusDescription(200, "SUBMIT_IMAGE", "NotMikey")
+        self.addKirkAndSpock()
+        self.addPhrasesForKirkAndSpock()
+        self.assertStatusDescription(200, "SUBMIT_IMAGE", "Kirk")
+        self.assertStatusDescription(200, "SUBMIT_IMAGE", "Spock")
 
     def test_imagePromptsIncludeProperPhrase(self):
         self.addKirkAndSpock()
