@@ -112,13 +112,6 @@ def create_app():
     def checkUsernameExists(_request):
         return (_request.form.get('username') is not None and _request.form.get('username') != '')
 
-
-    def checkStatusForPlayer(username):
-        if(username in _userStatuses.keys()):
-            return _userStatuses[username]
-        else:
-            return "ERROR_USER_NOT_JOINED"
-
     def savePhrase(username, phrase):
         if(username not in _phrases.keys()):
             _phrases[username] = [phrase]
