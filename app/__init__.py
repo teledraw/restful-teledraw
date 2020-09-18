@@ -16,7 +16,7 @@ def gameOver():
     for user in _userStatuses.keys():
         if user not in _phrases.keys() or user not in _images.keys() or len(_phrases[user]) + len(_images[user]) != number_of_users:
             return False
-    return True
+    return number_of_users > 0
 
 def create_app():
     app = Flask(__name__)
