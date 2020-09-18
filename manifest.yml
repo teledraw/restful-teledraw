@@ -1,6 +1,6 @@
 ---
 applications:
-  - name: fordlabs-artika
+  - name: arktika-api
     domain: 
     host: 
     env:
