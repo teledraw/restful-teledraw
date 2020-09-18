@@ -45,10 +45,9 @@ class IntegrationTests(unittest.TestCase):
         self.app.post('/join', data={'username': 'Mikey'})
         self.assertStatusDescription(200, "SUBMIT_INITIAL_PHRASE", "Mikey")
 
-    ##Error case test
-    # def test_getNextStepSays400IfYouHaveNotJoined(self):
-    #    response = self.app.get('/status?username=Mikey')
-    #    self.assertEqual(response.status_code, 400)
+    def test_getNextStepSays400IfYouHaveNotJoined(self):
+        response = self.app.get('/status?username=Mikey')
+        self.assertEqual(response.status_code, 400)
 
     def test_canPostInitialPhrase(self):
         self.addKirkAndSpock()
