@@ -24,7 +24,7 @@ class IntegrationTests(unittest.TestCase):
         response = self.app.post('/join', data={'username': 'Mikey'})
         self.assertEqual(response.status_code, 200)
 
-    def test_cannotJoinWithoutUsername(self):
+    def test_cannotJoinWithoutAPostBody(self):
         response = self.app.get('/join')
         self.assertEqual(response.status_code, 405)
 
@@ -93,10 +93,51 @@ class IntegrationTests(unittest.TestCase):
         self.addPhrasesForKirkAndSpock()
         self.addImagesForKirkAndSpock()
 
-
         response = self.app.get('/status?username=' + 'Kirk')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['description'], 'GAME_OVER')
+
+    def test_cannotGetResultsPriorToGameBeingOver(self):
+        self.addKirkAndSpock()
+        self.addPhrasesForKirkAndSpock()
+        response = self.app.get('/results')
+        self.assertEqual(response.status_code, 400)
+
+    def test_canGetResultsAfterCompletedTwoPlayerGame(self):
+        self.addKirkAndSpock()
+        self.addPhrasesForKirkAndSpock()
+        self.addImagesForKirkAndSpock()
+        response = self.app.get('/results')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()[0]['originator'], "Kirk")
+        self.assertEqual(response.get_json()[0]['submissions'][0], "Ever dance with the devil in the pale moonlight?")
+        self.assertEqual(response.get_json()[0]['submissions'][1], "spock image")
+
+        self.assertEqual(response.get_json()[1]['originator'], "Spock")
+        self.assertEqual(response.get_json()[1]['submissions'][0], "The devil went down to Georgia.")
+        self.assertEqual(response.get_json()[1]['submissions'][1], "kirk image")
+
+    def test_canGetResultsAfterCompletedThreePlayerGame(self):
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        self.addImagesForKirkBonesAndSpock()
+        self.addSecondPhrasesForKirkBonesAndSpock()
+        response = self.app.get('/results')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()[0]['originator'], "Kirk")
+        self.assertEqual(response.get_json()[0]['submissions'][0], "Ever dance with the devil in the pale moonlight?")
+        self.assertEqual(response.get_json()[0]['submissions'][1], "spock image")
+        self.assertEqual(response.get_json()[0]['submissions'][2], "What the devil does that mean?")
+
+        self.assertEqual(response.get_json()[1]['originator'], "Spock")
+        self.assertEqual(response.get_json()[1]['submissions'][0], "The devil went down to Georgia.")
+        self.assertEqual(response.get_json()[1]['submissions'][1], "bones image")
+        self.assertEqual(response.get_json()[1]['submissions'][2], "The devil's drink!")
+
+        self.assertEqual(response.get_json()[2]['originator'], "Bones")
+        self.assertEqual(response.get_json()[2]['submissions'][0], "That is devilishly clever.")
+        self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
+        self.assertEqual(response.get_json()[2]['submissions'][2], "The devil is in the details.")
 
 
 
@@ -120,6 +161,13 @@ class IntegrationTests(unittest.TestCase):
         self.app.post('/phrase', data={'username': 'Bones',
                                        'phrase': 'That is devilishly clever.'})
 
+    def addSecondPhrasesForKirkBonesAndSpock(self):
+        self.app.post('/phrase', data={'username': 'Spock',
+                                       'phrase': 'The devil is in the details.'})
+        self.app.post('/phrase', data={'username': 'Bones',
+                                       'phrase': 'What the devil does that mean?'})
+        self.app.post('/phrase', data={'username': 'Kirk',
+                                       'phrase': 'The devil\'s drink!'})
     def addImagesForKirkAndSpock(self):
         self.app.post('/image', data={'username': 'Kirk',
                                        'image': 'kirk image'})

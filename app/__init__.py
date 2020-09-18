@@ -2,6 +2,7 @@ import click
 from flask import Flask
 from flask import request
 from flask import jsonify
+import math
 
 
 _userStatuses = {}
@@ -77,12 +78,35 @@ def create_app():
             return '', 200
         return '', 400
 
+    @app.route('/results', methods=['GET'])
+    def get_results():
+        if gameOver():
+            return jsonify(getAllSubmissionThreadsByUser()), 200
+        else:
+            return 'Cannot get results: game not over', 400
+
+
     @app.route('/restart', methods=['POST'])
     def restart_game():
         _userStatuses.clear()
         _phrases.clear()
         _images.clear()
         return '', 200
+
+    def getAllSubmissionThreadsByUser():
+        toReturn = list()
+        for user in _userStatuses.keys():
+            toReturn.append({"originator": user, "submissions": getUserSubmissionThread(user)})
+        return toReturn
+
+    def getUserSubmissionThread(username):
+        users = list(_userStatuses.keys())
+        indexOfOriginalUser = users.index(username)
+        toReturn = [_phrases[username][0]]
+        for i in range(1, len(_userStatuses.keys())):
+            user = users[(indexOfOriginalUser + i) % len(users)]
+            toReturn.append(_phrases[user][int(i/2)] if i % 2 == 0 else _images[user][int(i/2)])
+        return toReturn
 
 
     def checkUsernameExists(_request):
