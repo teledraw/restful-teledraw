@@ -36,7 +36,6 @@ class IntegrationTests(unittest.TestCase):
         response = self.app.get('/status?username=Mikey')
         self.assertEqual(response.status_code, 400)
 
-
     def test_cannotJoinWithoutAUsername(self):
         response = self.app.post('/join', data={'username': ''})
         self.assertEqual(response.status_code, 400)
@@ -70,6 +69,20 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['description'], "SUBMIT_IMAGE")
         self.assertEqual(response.get_json()['prompt'], 'The devil went down to Georgia.')
+
+    def test_cannotSubmitPhraseWhenItIsImageTime(self):
+        self.addKirkAndSpock()
+        self.addPhrasesForKirkAndSpock()
+
+        response = self.app.post('/phrase', data={'username': 'Spock', 'phrase': 'The devil is in the details.'})
+        self.assertEqual(response.status_code, 400)
+
+    def test_cannotSubmitImageWhenItIsPhraseTime(self):
+        self.addKirkAndSpock()
+
+        response = self.app.post('/image', data={'username': 'Spock',
+                                                 'image': 'spock image'})
+        self.assertEqual(response.status_code, 400)
 
     def test_phrasePromptsIncludeProperImage(self):
         self.addKirkBonesAndSpock()
@@ -136,9 +149,6 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
         self.assertEqual(response.get_json()[2]['submissions'][2], "The devil is in the details.")
 
-
-
-
     def addKirkAndSpock(self):
         self.app.post('/join', data={'username': 'Kirk'})
         self.app.post('/join', data={'username': 'Spock'})
@@ -165,11 +175,12 @@ class IntegrationTests(unittest.TestCase):
                                        'phrase': 'What the devil does that mean?'})
         self.app.post('/phrase', data={'username': 'Kirk',
                                        'phrase': 'The devil\'s drink!'})
+
     def addImagesForKirkAndSpock(self):
         self.app.post('/image', data={'username': 'Kirk',
-                                       'image': 'kirk image'})
+                                      'image': 'kirk image'})
         self.app.post('/image', data={'username': 'Spock',
-                                       'image': 'spock image'})
+                                      'image': 'spock image'})
 
     def addImagesForKirkBonesAndSpock(self):
         self.addImagesForKirkAndSpock()
