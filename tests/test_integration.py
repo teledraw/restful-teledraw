@@ -18,7 +18,8 @@ class IntegrationTests(unittest.TestCase):
     def test_helloWorldEndpoint(self):
         response = self.app.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data.decode('utf-8'), 'Hello World!')
+        self.assertEqual(response.data.decode('utf-8'), 'This is the Arktika API base URL.  Please add an endpoint '
+                                                        'name to your request to get started.')
 
     def test_canJoinByPostingUsername(self):
         response = self.app.post('/join', data={'username': 'Mikey'})

@@ -24,7 +24,7 @@ def create_app():
     # a simple response that says hello
     @app.route('/')
     def hello_world():
-        return 'Hello World!'
+        return 'This is the Arktika API base URL.  Please add an endpoint name to your request to get started.'
 
     @app.route('/join', methods=['POST'])
     def join_game():
