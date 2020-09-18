@@ -2,11 +2,11 @@ import click
 from flask import Flask
 from flask import request
 from flask import jsonify
-import math
+from flask_cors import CORS, cross_origin
+
 
 
 _userStatuses = {}
-# SUBMIT_INITIAL_PHRASE, SUBMIT_IMAGE, WAIT
 _phrases = {}
 _images = {}
 
@@ -20,13 +20,17 @@ def gameOver():
 
 def create_app():
     app = Flask(__name__)
+    cors = CORS(app)
+    app.config['CORS_HEADERS'] = 'Content-Type'
 
     # a simple response that says hello
     @app.route('/')
+    @cross_origin()
     def hello_world():
         return 'This is the Arktika API base URL.  Please add an endpoint name to your request to get started.'
 
     @app.route('/join', methods=['POST'])
+    @cross_origin()
     def join_game():
         if checkUsernameExists(request):
             _userStatuses[request.form.get('username')] = 'SUBMIT_INITIAL_PHRASE'
@@ -35,6 +39,7 @@ def create_app():
 
 
     @app.route('/status', methods=['GET'])
+    @cross_origin()
     def get_status_for_player():
         if request.args['username'] in _userStatuses.keys():
             statusForUser = _userStatuses[request.args['username']]
@@ -48,6 +53,7 @@ def create_app():
         return '', 400
 
     @app.route('/phrase', methods=['POST'])
+    @cross_origin()
     def submit_phrase():
         if request.form.get('username') in _userStatuses.keys() and (_userStatuses[request.form.get('username')] in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]):
             savePhrase(request.form.get('username'), request.form.get('phrase'))
@@ -64,6 +70,7 @@ def create_app():
         return '', 400
 
     @app.route('/image', methods=['POST'])
+    @cross_origin()
     def submit_image():
         if request.form.get('username') in _userStatuses.keys() and (_userStatuses[request.form.get('username')] == "SUBMIT_IMAGE"):
             saveImage(request.form.get('username'), request.form.get('image'))
@@ -79,6 +86,7 @@ def create_app():
         return '', 400
 
     @app.route('/results', methods=['GET'])
+    @cross_origin()
     def get_results():
         if gameOver():
             return jsonify(getAllSubmissionThreadsByUser()), 200
@@ -87,6 +95,7 @@ def create_app():
 
 
     @app.route('/restart', methods=['POST'])
+    @cross_origin()
     def restart_game():
         _userStatuses.clear()
         _phrases.clear()
