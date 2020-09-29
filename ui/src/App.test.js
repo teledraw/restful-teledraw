@@ -1,5 +1,5 @@
 import React from "react";
-import { render, act, fireEvent, waitFor} from "@testing-library/react";
+import { render, act, fireEvent, wait} from "@testing-library/react";
 import App from "./App";
 import axios from "axios";
 import '@testing-library/jest-dom/extend-expect'
@@ -20,7 +20,7 @@ test("asks you to join the game with a username", () => {
   expect(usernameInputElement).toBeInTheDocument();
 });
 
-test("hits the join API endpoint when you submit the join form", () => {
+test("hits the join API endpoint when you submit the join form", async () => {
   axios.post = jest.fn();
   const { getByText, getByLabelText } = render(<App />);
   const usernameInput = getByLabelText(/Your Name/);
@@ -33,13 +33,14 @@ test("hits the join API endpoint when you submit the join form", () => {
   act(() => {
     fireEvent.click(submitButton);
   });
-  expect(axios.post).toHaveBeenCalledWith("http://localhost:5000/join", {
+  await wait(() => {expect(axios.post).toHaveBeenCalledWith("http://localhost:5000/join", {
     username: "Billy",
-  });
+  })});
 });
 
 test("shows the submit phrase form when the API is in SUBMIT_INITIAL_PHRASE state", async () => {
   axios.get = jest.fn(() => {
+    console.log("THIS HAPPENED");
     return {"description":"SUBMIT_INITIAL_PHRASE"};
     
   });
@@ -55,5 +56,23 @@ test("shows the submit phrase form when the API is in SUBMIT_INITIAL_PHRASE stat
   act(() => {
     fireEvent.click(submitButton);
   });
-  await waitFor(() => {expect(getByText('Submit a Phrase')).toBeInTheDocument()});
+  await wait(() => {expect(getByText('Submit a Phrase')).toBeInTheDocument()});
+});
+
+test("shows the wait dialogue when the API is in WAIT state", async () => {
+  axios.get = jest.fn(() => {
+    return {"description":"WAIT"};
+    
+  });
+  axios.post = jest.fn();
+  const { getByText, getByLabelText } = render(<App />);
+  const usernameInput = getByLabelText(/Your Name/);
+  act(() => {
+    fireEvent.change(usernameInput, { target: { value: "Billy" } });
+  });
+  const submitButton = getByText("JOIN");
+  act(() => {
+    fireEvent.click(submitButton);
+  });
+  await wait(() => {expect(getByText('Waiting for Other Players')).toBeInTheDocument()});
 });

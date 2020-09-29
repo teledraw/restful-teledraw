@@ -62,6 +62,14 @@ class IntegrationTests(unittest.TestCase):
         self.assertStatusDescription(200, "SUBMIT_IMAGE", "Kirk")
         self.assertStatusDescription(200, "SUBMIT_IMAGE", "Spock")
 
+    def test_cannotJoinAfterAllPlayersSubmitInitialPhrase(self):
+        self.addKirkAndSpock()
+        self.addPhrasesForKirkAndSpock()
+        response = self.app.post('/join', data={'username': 'Mikey'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()['error'], "Cannot join a game in progress.")
+
+
     def test_imagePromptsIncludeProperPhrase(self):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()

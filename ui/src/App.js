@@ -5,13 +5,30 @@ import PhraseForm from "./PhraseForm.js";
 import ImageForm from "./ImageForm.js";
 import Results from "./Results.js";
 import axios from "axios";
+import { useInterval } from "./hooks/interval";
 
 function App() {
   const [username, setUsername] = useState("");
   const [apiStatus, setApiStatus] = useState("");
 
+  useInterval(pollApiStatusOnce, 2000);
+
+  async function pollApiStatusOnce(){
+    if(username === "") return;
+    const status = await getApiStatus();
+    setApiStatus(status.data);
+  }
+
+  function getApiStatus(){
+    return axios.get('http://localhost:5000/status?username=' + username);
+  }
+
   function setStateToInitialPhrase() {
     // setApiStatus(axios.get('http://localhost:5000/status?username=' + username));
+  }
+
+  async function getResults(){
+    return (await axios.get('http://localhost:5000/results')).data;
   }
 
   function getFakeResults() {
@@ -41,21 +58,23 @@ function App() {
   }
 
   function usernameJoined(joinedUsername) {
+    axios.post('http://localhost:5000/join', {username:joinedUsername});
     setUsername(joinedUsername);
-    setApiStatus("SUBMIT_INITIAL_PHRASE");
-    // poll api
+    pollApiStatusOnce();
   }
 
-  function phraseSubmitted() {
-    setApiStatus("SUBMIT_IMAGE");
+  function phraseSubmitted(phrase) {
+    axios.post('http://localhost:5000/phrase', {username:username, phrase:phrase})
+    pollApiStatusOnce();
   }
 
   function lastPhraseSubmitted() {
     endGame();
   }
 
-  function imageSubmitted() {
-    setApiStatus("SUBMIT_PHRASE");
+  function artSubmitted(art) {
+    axios.post('http://localhost:5000/image', {username:username, image:art})
+    pollApiStatusOnce();
   }
 
   function endGame() {
@@ -69,7 +88,7 @@ function App() {
       </div>
     );
   } else {
-    switch (apiStatus) {
+    switch (apiStatus.description) {
       case "SUBMIT_INITIAL_PHRASE":
         return (
           <div className="App">
@@ -80,23 +99,28 @@ function App() {
         return (
           <div className="App">
             <PhraseForm
-              phraseSubmitted={lastPhraseSubmitted}
-              image={"an image"}
+              phraseSubmitted={phraseSubmitted}
+              image={apiStatus.prompt}
             />
           </div>
         );
       case "SUBMIT_IMAGE":
         return (
           <div className="App">
-            <ImageForm imageSubmitted={imageSubmitted} />
+            <ImageForm imageSubmitted={artSubmitted} phrase={apiStatus.prompt} />
           </div>
         );
       case "GAME_OVER":
         return (
           <div className="App">
-            <Results results={getFakeResults()} />
+            <Results results={getResults()} />
           </div>
         );
+      case "WAIT":
+        return (
+          <div className="App">
+            Waiting for other players...
+          </div>);
       case "":
       default:
         return <div>Waiting for API...</div>;
