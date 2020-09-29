@@ -5,7 +5,6 @@ export default function PhraseForm(props) {
   const [phrase, setPhrase] = useState();
 
   function handleSubmit(event) {
-    // axios.post('http://localhost:5000/join', {username:username});
     props.phraseSubmitted(phrase);
     event.preventDefault();
   }
@@ -19,8 +18,8 @@ export default function PhraseForm(props) {
       <h1>Submit a Phrase</h1>
       {props.image && (
         <img
-          src="http://unrealitymag.com/wp-content/uploads/2009/04/kids_nintendo_6.jpg"
-          alt="hasty-ddrawing"
+          src={"data:image/png;base64, " + props.image}
+          alt="The image used as a prompt"
           width="800"
           height="600"
         />

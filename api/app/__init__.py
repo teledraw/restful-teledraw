@@ -33,7 +33,7 @@ def create_app():
     @cross_origin()
     def join_game():
         if checkUsernameExists(request):
-            _userStatuses[request.form.get('username')] = 'SUBMIT_INITIAL_PHRASE'
+            _userStatuses[request.json['username']] = 'SUBMIT_INITIAL_PHRASE'
             return '', 200
         return '', 400
 
@@ -55,9 +55,9 @@ def create_app():
     @app.route('/phrase', methods=['POST'])
     @cross_origin()
     def submit_phrase():
-        if request.form.get('username') in _userStatuses.keys() and (_userStatuses[request.form.get('username')] in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]):
-            savePhrase(request.form.get('username'), request.form.get('phrase'))
-            _userStatuses[request.form.get('username')] = "WAIT"
+        if request.json['username'] in _userStatuses.keys() and (_userStatuses[request.json['username']] in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]):
+            savePhrase(request.json['username'], request.json['phrase'])
+            _userStatuses[request.json['username']] = "WAIT"
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
                 next_status = 'SUBMIT_IMAGE'
@@ -72,9 +72,9 @@ def create_app():
     @app.route('/image', methods=['POST'])
     @cross_origin()
     def submit_image():
-        if request.form.get('username') in _userStatuses.keys() and (_userStatuses[request.form.get('username')] == "SUBMIT_IMAGE"):
-            saveImage(request.form.get('username'), request.form.get('image'))
-            _userStatuses[request.form.get('username')] = "WAIT"
+        if request.json['username'] in _userStatuses.keys() and (_userStatuses[request.json['username']] == "SUBMIT_IMAGE"):
+            saveImage(request.json['username'], request.json['image'])
+            _userStatuses[request.json['username']] = "WAIT"
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
                 next_status = 'SUBMIT_PHRASE'
@@ -119,7 +119,7 @@ def create_app():
 
 
     def checkUsernameExists(_request):
-        return (_request.form.get('username') is not None and _request.form.get('username') != '')
+        return (_request.json['username'] is not None and _request.json['username'] != '')
 
     def savePhrase(username, phrase):
         if(username not in _phrases.keys()):

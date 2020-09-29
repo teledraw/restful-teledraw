@@ -5,7 +5,6 @@ export function JoinForm(props) {
   const [username, setUsername] = useState();
 
   function handleSubmit(event) {
-    // axios.post('http://localhost:5000/join', {username:username});
     props.usernameJoined(username);
     event.preventDefault();
   }
