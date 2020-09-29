@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import UserResultsSet from "./UserResultsSet.js";
 import "./results.css";
@@ -7,6 +7,10 @@ export default function Results(props) {
   //assumption:
   //props.results is an array of objects of shape {username:"xyz", phrases: [], images: []}
 
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {axios.get("http://localhost:5000/results")
+  .then((response) => {setResults(response.data)})}, []);
   return (
     <div className="flex-column-container">
       <div className="header">
@@ -14,24 +18,11 @@ export default function Results(props) {
         <div>(Are you winning, son?)</div>
       </div>
       <div className="flex-row-container">
-      <UserResultsSet
-        className="player1"
-        username={props.results[0].username}
-        phrases={props.results[0].phrases}
-        images={props.results[0].images}
-      />
-      <UserResultsSet
-        className="player2"
-        username={props.results[1].username}
-        phrases={props.results[1].phrases}
-        images={props.results[1].images}
-      />
-      <UserResultsSet
-        className="player3"
-        username={props.results[2].username}
-        phrases={props.results[2].phrases}
-        images={props.results[2].images}
-      />
+        {results.map((result) => {return (<UserResultsSet
+        className="result-set"
+        username={result.originator}
+        submissions={result.submissions}
+      />)})}
     </div>
     </div>
   );

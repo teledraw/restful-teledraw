@@ -40,7 +40,6 @@ test("hits the join API endpoint when you submit the join form", async () => {
 
 test("shows the submit phrase form when the API is in SUBMIT_INITIAL_PHRASE state", async () => {
   axios.get = jest.fn(() => {
-    console.log("THIS HAPPENED");
     return {"description":"SUBMIT_INITIAL_PHRASE"};
     
   });
