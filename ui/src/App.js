@@ -19,27 +19,31 @@ function App() {
     setApiStatus(status.data);
   }
 
+  function getUrl(){
+    return process.env.REACT_APP_API_URL;
+  }
+
   function getApiStatus(){
-    return axios.get('http://localhost:5000/status?username=' + username);
+    return axios.get(getUrl() + '/status?username=' + username);
   }
 
   function getResults(){
-    return axios.get('http://localhost:5000/results').then((response) => {return response.data});
+    return axios.get(getUrl() + '/results').then((response) => {return response.data});
   }
 
   function usernameJoined(joinedUsername) {
-    axios.post('http://localhost:5000/join', {username:joinedUsername});
+    axios.post(getUrl() + '/join', {username:joinedUsername});
     setUsername(joinedUsername);
     pollApiStatusOnce();
   }
 
   function phraseSubmitted(phrase) {
-    axios.post('http://localhost:5000/phrase', {username:username, phrase:phrase})
+    axios.post(getUrl() + '/phrase', {username:username, phrase:phrase})
     pollApiStatusOnce();
   }
 
   function artSubmitted(art) {
-    axios.post('http://localhost:5000/image', {username:username, image:art})
+    axios.post(getUrl() + '/image', {username:username, image:art})
     pollApiStatusOnce();
   }
 
