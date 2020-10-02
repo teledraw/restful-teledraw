@@ -7,6 +7,5 @@ return (<div>
         {props.submissions.map((submission, index) => {
             return index % 2 === 0 ? <div>{submission}</div> : <img src={submission} alt=""></img>
         })}
-
     </div>);
 }

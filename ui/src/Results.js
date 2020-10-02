@@ -4,13 +4,12 @@ import UserResultsSet from "./UserResultsSet.js";
 import "./results.css";
 
 export default function Results(props) {
-  //assumption:
-  //props.results is an array of objects of shape {username:"xyz", phrases: [], images: []}
 
   const [results, setResults] = useState([]);
 
   useEffect(() => {axios.get("http://localhost:5000/results")
   .then((response) => {setResults(response.data)})}, []);
+
   return (
     <div className="flex-column-container">
       <div className="header">
