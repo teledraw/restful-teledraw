@@ -18,7 +18,7 @@ export default function PhraseForm(props) {
       <h1>Submit a Phrase</h1>
       {props.image && (
         <img
-          src={"data:image/png;base64, " + props.image}
+          src={props.image}
           alt="The image used as a prompt"
           width="800"
           height="600"

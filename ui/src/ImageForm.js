@@ -4,12 +4,14 @@ export default function ImageForm(props) {
   const [image, setImage] = useState();
 
   function handleSubmit(event) {
-    props.imageSubmitted(image);
+    let fileData = new FileReader();
+    fileData.onloadend = (loadEvent) => {props.imageSubmitted(loadEvent.target.result)};
+    fileData.readAsDataURL(image);
     event.preventDefault();
   }
 
   function handleChange(event) {
-    setImage(event.target.value);
+    setImage(event.target.files[0]);
   }
 
   return (
@@ -18,7 +20,7 @@ export default function ImageForm(props) {
   <h2>Draw this phrase: "{props.phrase}"</h2>
       <form>
         <label htmlFor="image-input">Your Drawing:</label>
-        <input type="file" id="image-input" onChange={handleChange}></input>
+        <input type="file" accept="image/png" id="image-input" onChange={handleChange}/>
         <button onClick={handleSubmit}>UPLOAD</button>
       </form>
     </div>
