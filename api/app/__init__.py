@@ -18,12 +18,21 @@ def gameOver():
             return False
     return number_of_users > 0
 
+
+def getNextPlayer(username):
+    usernames = list(_userStatuses.keys())
+    return usernames[0] if usernames.index(username) == len(usernames) - 1 else usernames[usernames.index(username) + 1]
+
+def getPreviousPlayer(username):
+    usernames = list(_userStatuses.keys())
+    return usernames[len(usernames) - 1] if usernames.index(username) == 0 else usernames[usernames.index(username) - 1]
+
+
 def create_app():
     app = Flask(__name__)
     cors = CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
 
-    # a simple response that says hello
     @app.route('/')
     @cross_origin()
     def hello_world():
@@ -45,11 +54,11 @@ def create_app():
             statusForUser = _userStatuses[request.args['username']]
             if(statusForUser == 'SUBMIT_IMAGE'):
                 prompt = getPhrasePrompt(request.args['username'])
-                return jsonify({'description': statusForUser, 'prompt': prompt}), 200
+                return jsonify({'description': statusForUser, 'prompt': prompt, 'previousPlayerUsername': getPreviousPlayer(request.args['username']), 'nextPlayerUsername': getNextPlayer(request.args['username'])}), 200
             if(statusForUser == 'SUBMIT_PHRASE'):
                 prompt = getImagePrompt(request.args['username'])
-                return jsonify({'description': statusForUser, 'prompt': prompt}), 200
-            return jsonify({'description': statusForUser}), 200
+                return jsonify({'description': statusForUser, 'prompt': prompt, 'previousPlayerUsername': getPreviousPlayer(request.args['username']), 'nextPlayerUsername': getNextPlayer(request.args['username'])}), 200
+            return jsonify({'description': statusForUser, 'previousPlayerUsername': getPreviousPlayer(request.args['username']), 'nextPlayerUsername': getNextPlayer(request.args['username'])}), 200
         return '', 400
 
     @app.route('/phrase', methods=['POST'])
