@@ -15,6 +15,12 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, statusCode)
         self.assertEqual(response.get_json()['description'], statusMessage)
 
+    def assertStatusBeforeAfter(self, username, before, after):
+        response = self.app.get('/status?username=' + username)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json['previousPlayerUsername'], before)
+        self.assertEqual(response.get_json['nextPlayerUsername'], after)
+
     def test_helloWorldEndpoint(self):
         response = self.app.get('/')
         self.assertEqual(response.status_code, 200)
@@ -48,6 +54,17 @@ class IntegrationTests(unittest.TestCase):
     def test_getNextStepSays400IfYouHaveNotJoined(self):
         response = self.app.get('/status?username=Mikey')
         self.assertEqual(response.status_code, 400)
+
+    def test_statusEndpointCorrectlyIdentifiesPlayersBeforeAndAfterYou_2player(self):
+        self.addKirkAndSpock()
+        self.assertStatusBeforeAfter(username="Kirk", before="Spock", after="Spock")
+        self.assertStatusBeforeAfter(username="Spock", before="Kirk", after="Kirk")
+
+    def test_statusEndpointCorrectlyIdentifiesPlayersBeforeAndAfterYou_3player(self):
+        self.addKirkBonesAndSpock()
+        self.assertStatusBeforeAfter(username="Kirk", before="Bones", after="Spock")
+        self.assertStatusBeforeAfter(username="Spock", before="Kirk", after="Bones")
+        self.assertStatusBeforeAfter(username="Bones", before="Spock", after="Kirk")
 
     def test_canPostInitialPhrase(self):
         self.addKirkAndSpock()
