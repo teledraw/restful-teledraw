@@ -50,11 +50,11 @@ test("shows the submit phrase form when the API is in SUBMIT_INITIAL_PHRASE stat
 
 test("shows the submit image form when the API is in SUBMIT_IMAGE state", async () => {
   axios.get = jest.fn(() => {
-    return {data:{description:"SUBMIT_IMAGE", prompt:"Once upon a time"}};
+    return {data:{description:"SUBMIT_IMAGE", prompt:"Once upon a time", previousPlayerUsername:"Tinkerbell"}};
   });
   axios.post = jest.fn();
   const {getByText} = joinGame();
-  await wait(() => {expect(getByText('Draw this phrase: "Once upon a time"')).toBeInTheDocument()});
+  await wait(() => {expect(getByText('Draw this phrase (from Tinkerbell): "Once upon a time"')).toBeInTheDocument()});
 });
 
 test("shows the wait dialogue when the API is in WAIT state", async () => {

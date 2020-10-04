@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "./App.css";
-import { JoinForm } from "./JoinForm.js";
-import PhraseForm from "./PhraseForm.js";
-import ImageForm from "./ImageForm.js";
-import Results from "./Results.js";
+import { JoinForm } from "./statecomponents/JoinForm.js";
+import PhraseForm from "./statecomponents/PhraseForm.js";
+import ImageForm from "./statecomponents/ImageForm.js";
+import Results from "./statecomponents/Results.js";
 import axios from "axios";
 import { useInterval } from "./hooks/interval";
 
@@ -58,7 +58,8 @@ function App() {
       case "SUBMIT_INITIAL_PHRASE":
         return (
           <div className="App">
-            <PhraseForm phraseSubmitted={phraseSubmitted} />
+            <PhraseForm phraseSubmitted={phraseSubmitted}
+                        nextUsername={apiStatus.nextPlayerUsername}/>
           </div>
         );
       case "SUBMIT_PHRASE":
@@ -67,13 +68,19 @@ function App() {
             <PhraseForm
               phraseSubmitted={phraseSubmitted}
               image={apiStatus.prompt}
+              previousUsername={apiStatus.previousPlayerUsername}
+              nextUsername={apiStatus.nextPlayerUsername}
             />
           </div>
         );
       case "SUBMIT_IMAGE":
         return (
           <div className="App">
-            <ImageForm imageSubmitted={artSubmitted} phrase={apiStatus.prompt} />
+            <ImageForm imageSubmitted={artSubmitted}
+                       phrase={apiStatus.prompt}
+                       previousUsername={apiStatus.previousPlayerUsername}
+                       nextUsername={apiStatus.nextPlayerUsername}
+            />
           </div>
         );
       case "GAME_OVER":

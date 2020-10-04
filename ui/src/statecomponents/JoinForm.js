@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "axios/index";
 
 export function JoinForm(props) {
   const [username, setUsername] = useState();

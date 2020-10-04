@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import UserResultsSet from "./UserResultsSet.js";
-import "./results.css";
+import axios from "axios/index";
+import UserResultsSet from "../helpercomponents/UserResultsSet.js";
+import "../results.css";
 
 export default function Results(props) {
 

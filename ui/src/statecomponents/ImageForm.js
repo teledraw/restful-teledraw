@@ -17,9 +17,9 @@ export default function ImageForm(props) {
   return (
     <div>
       <h1>Submit an Image</h1>
-  <h2>Draw this phrase: "{props.phrase}"</h2>
+  <h2>Draw this phrase (from {props.previousUsername}): "{props.phrase}"</h2>
       <form>
-        <label htmlFor="image-input">Your Drawing:</label>
+        <label htmlFor="image-input">Your Drawing (that will go to {props.nextUsername}):</label>
         <input type="file" accept="image/png" id="image-input" onChange={handleChange}/>
         <button onClick={handleSubmit}>UPLOAD</button>
       </form>
