@@ -78,7 +78,7 @@ class IntegrationTests(unittest.TestCase):
         response = self.app.get('/status?username=Mikey&game=gamey')
         self.assertEqual(response.status_code, 400)
         self.assertTrue(response.json and 'error' in response.json.keys())
-        self.assertEqual(response.json['error'], 'No such game: "gamey"')
+        self.assertEqual(response.json['error'], 'No such game: "gamey".')
 
     def test_cannotJoinWithoutAUsername(self):
         response = self.app.post('/join', json={'game': 'XYZORG'})
@@ -138,7 +138,7 @@ class IntegrationTests(unittest.TestCase):
         self.addKirkBonesAndSpock()
         response = self.app.get('/summary?game=NCC-1701C')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()['error'], 'No such game: "NCC-1701C"')
+        self.assertEqual(response.get_json()['error'], 'No such game: "NCC-1701C".')
 
     def test_canPostInitialPhrase(self):
         self.addKirkAndSpock()
@@ -207,12 +207,12 @@ class IntegrationTests(unittest.TestCase):
     def test_submitImageWarnsOfInvalidGameName(self):
         self.addKirkBonesAndSpock()
         self.addPhrasesForKirkAndSpock()
-        self.assertPostImageError("Kirk", "an image", "NCC-1701C", 'No such game: "NCC-1701C"')
+        self.assertPostImageError("Kirk", "an image", "NCC-1701C", 'No such game: "NCC-1701C".')
 
     def test_submitPhraseWarnsOfInvalidGameName(self):
         self.addKirkBonesAndSpock()
         self.addPhrasesForKirkAndSpock()
-        self.assertPostPhraseError("Kirk", "the devils of our nature", "NCC-1701C", 'No such game: "NCC-1701C"')
+        self.assertPostPhraseError("Kirk", "the devils of our nature", "NCC-1701C", 'No such game: "NCC-1701C".')
 
     def test_phrasePromptsIncludeProperImage(self):
         self.addKirkBonesAndSpock()
@@ -231,12 +231,7 @@ class IntegrationTests(unittest.TestCase):
     def test_cannotGetResultsPriorToGameBeingOver(self):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()
-        response = self.app.get('/results')
-        self.assertEqual(response.status_code, 400)
-
-    def test_cannotGetResultsPriorToGameStarting(self):
-        response = self.app.get('/results')
-        self.assertEqual(response.status_code, 400)
+        self.assertResultsError('Cannot get results: game not over.')
 
     def test_cannotGetResultsWithoutGameCode(self):
         self.addKirkAndSpock()
@@ -248,7 +243,7 @@ class IntegrationTests(unittest.TestCase):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()
         self.addImagesForKirkAndSpock()
-        self.assertResultsError('Cannot get results.  No such game: "NCC-1701C"', 'NCC-1701C')
+        self.assertResultsError('Cannot get results.  No such game: "NCC-1701C".', 'NCC-1701C')
 
     def test_canGetResultsAfterCompletedTwoPlayerGame(self):
         self.addKirkAndSpock()
