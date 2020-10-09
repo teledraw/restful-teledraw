@@ -66,6 +66,19 @@ class IntegrationTests(unittest.TestCase):
         self.assertStatusBeforeAfter(username="Spock", before="Kirk", after="Bones")
         self.assertStatusBeforeAfter(username="Bones", before="Spock", after="Kirk")
 
+    def test_summaryEndpointCanSummarizeAtGameStart(self):
+        self.addKirkBonesAndSpock()
+        response = self.app.get('/summary')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json[0]['username'], "Kirk")
+        self.assertEqual(response.json[1]['username'], "Spock")
+        self.assertEqual(response.json[2]['username'], "Bones")
+        self.assertEqual(response.json[0]['status']['description'], "SUBMIT_INITIAL_PHRASE")
+        self.assertEqual(response.json[1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
+        self.assertEqual(response.json[2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
+
+
+
     def test_canPostInitialPhrase(self):
         self.addKirkAndSpock()
         response = self.app.post('/phrase', data={'username': 'Kirk',

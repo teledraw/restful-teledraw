@@ -4,17 +4,16 @@ from flask import request
 from flask import jsonify
 from flask_cors import CORS, cross_origin
 
-
-
 _userStatuses = {}
 _phrases = {}
 _images = {}
 
 
 def gameOver():
-    number_of_users = len (_userStatuses.keys())
+    number_of_users = len(_userStatuses.keys())
     for user in _userStatuses.keys():
-        if user not in _phrases.keys() or user not in _images.keys() or len(_phrases[user]) + len(_images[user]) != number_of_users:
+        if user not in _phrases.keys() or user not in _images.keys() or len(_phrases[user]) + len(
+                _images[user]) != number_of_users:
             return False
     return number_of_users > 0
 
@@ -22,6 +21,7 @@ def gameOver():
 def getNextPlayer(username):
     usernames = list(_userStatuses.keys())
     return usernames[0] if usernames.index(username) == len(usernames) - 1 else usernames[usernames.index(username) + 1]
+
 
 def getPreviousPlayer(username):
     usernames = list(_userStatuses.keys())
@@ -46,25 +46,28 @@ def create_app():
             return '', 200
         return '', 400
 
-
     @app.route('/status', methods=['GET'])
     @cross_origin()
     def get_status_for_player():
         if request.args['username'] in _userStatuses.keys():
-            statusForUser = _userStatuses[request.args['username']]
-            if(statusForUser == 'SUBMIT_IMAGE'):
-                prompt = getPhrasePrompt(request.args['username'])
-                return jsonify({'description': statusForUser, 'prompt': prompt, 'previousPlayerUsername': getPreviousPlayer(request.args['username']), 'nextPlayerUsername': getNextPlayer(request.args['username'])}), 200
-            if(statusForUser == 'SUBMIT_PHRASE'):
-                prompt = getImagePrompt(request.args['username'])
-                return jsonify({'description': statusForUser, 'prompt': prompt, 'previousPlayerUsername': getPreviousPlayer(request.args['username']), 'nextPlayerUsername': getNextPlayer(request.args['username'])}), 200
-            return jsonify({'description': statusForUser, 'previousPlayerUsername': getPreviousPlayer(request.args['username']), 'nextPlayerUsername': getNextPlayer(request.args['username'])}), 200
+            return jsonify(get_user_status(request.args['username'])), 200
         return '', 400
+
+    def get_user_status(username):
+        statusForUser = _userStatuses[username]
+        if (statusForUser == 'SUBMIT_IMAGE' or statusForUser == 'SUBMIT_PHRASE'):
+            return {'description': statusForUser,
+                    'prompt': getPhrasePrompt(username) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
+                        username), 'previousPlayerUsername': getPreviousPlayer(username),
+                    'nextPlayerUsername': getNextPlayer(username)}
+        return {'description': statusForUser, 'previousPlayerUsername': getPreviousPlayer(username),
+                'nextPlayerUsername': getNextPlayer(username)}
 
     @app.route('/phrase', methods=['POST'])
     @cross_origin()
     def submit_phrase():
-        if request.json['username'] in _userStatuses.keys() and (_userStatuses[request.json['username']] in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]):
+        if request.json['username'] in _userStatuses.keys() and (
+                _userStatuses[request.json['username']] in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]):
             savePhrase(request.json['username'], request.json['phrase'])
             _userStatuses[request.json['username']] = "WAIT"
 
@@ -81,7 +84,8 @@ def create_app():
     @app.route('/image', methods=['POST'])
     @cross_origin()
     def submit_image():
-        if request.json['username'] in _userStatuses.keys() and (_userStatuses[request.json['username']] == "SUBMIT_IMAGE"):
+        if request.json['username'] in _userStatuses.keys() and (
+                _userStatuses[request.json['username']] == "SUBMIT_IMAGE"):
             saveImage(request.json['username'], request.json['image'])
             _userStatuses[request.json['username']] = "WAIT"
 
@@ -94,6 +98,17 @@ def create_app():
             return '', 200
         return '', 400
 
+    @app.route('/summary', methods=['GET'])
+    @cross_origin()
+    def summary():
+        status_summary = list()
+        for user in _userStatuses.keys():
+            user_status = dict()
+            user_status['username'] = user
+            user_status['status'] = get_user_status(user)
+            status_summary.append(user_status)
+        return jsonify(status_summary), 200
+
     @app.route('/results', methods=['GET'])
     @cross_origin()
     def get_results():
@@ -101,7 +116,6 @@ def create_app():
             return jsonify(getAllSubmissionThreadsByUser()), 200
         else:
             return 'Cannot get results: game not over', 400
-
 
     @app.route('/restart', methods=['POST'])
     @cross_origin()
@@ -123,15 +137,14 @@ def create_app():
         toReturn = [_phrases[username][0]]
         for i in range(1, len(_userStatuses.keys())):
             user = users[(indexOfOriginalUser + i) % len(users)]
-            toReturn.append(_phrases[user][int(i/2)] if i % 2 == 0 else _images[user][int(i/2)])
+            toReturn.append(_phrases[user][int(i / 2)] if i % 2 == 0 else _images[user][int(i / 2)])
         return toReturn
 
-
     def checkUsernameExists(_request):
-        return (_request.json['username'] is not None and _request.json['username'] != '')
+        return (_request.json is not None and _request.json['username'] is not None and _request.json['username'] != '')
 
     def savePhrase(username, phrase):
-        if(username not in _phrases.keys()):
+        if (username not in _phrases.keys()):
             _phrases[username] = [phrase]
         else:
             _phrases[username].append(phrase)
@@ -143,7 +156,7 @@ def create_app():
         return _phrases[usernameOfPhraseSource][-1]
 
     def saveImage(username, image):
-        if(username not in _images.keys()):
+        if (username not in _images.keys()):
             _images[username] = [image]
         else:
             _images[username].append(image)
