@@ -17,6 +17,9 @@ def gameOver():
             return False
     return number_of_users > 0
 
+def tooLateToJoin():
+    return not all(status == "SUBMIT_INITIAL_PHRASE" for status in list(_userStatuses.values()))
+
 
 def getNextPlayer(username):
     usernames = list(_userStatuses.keys())
@@ -41,10 +44,13 @@ def create_app():
     @app.route('/join', methods=['POST'])
     @cross_origin()
     def join_game():
-        if checkUsernameExists(request):
+        if not request_includes_username(request):
+            return jsonify({'error': "Cannot join without username."}), 400
+        elif tooLateToJoin():
+            return jsonify({'error': "Cannot join a game in progress."}), 400
+        else:
             _userStatuses[request.json['username']] = 'SUBMIT_INITIAL_PHRASE'
             return '', 200
-        return '', 400
 
     @app.route('/status', methods=['GET'])
     @cross_origin()
@@ -140,7 +146,7 @@ def create_app():
             toReturn.append(_phrases[user][int(i / 2)] if i % 2 == 0 else _images[user][int(i / 2)])
         return toReturn
 
-    def checkUsernameExists(_request):
+    def request_includes_username(_request):
         return (_request.json is not None and _request.json['username'] is not None and _request.json['username'] != '')
 
     def savePhrase(username, phrase):

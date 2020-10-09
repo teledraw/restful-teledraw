@@ -18,8 +18,8 @@ class IntegrationTests(unittest.TestCase):
     def assertStatusBeforeAfter(self, username, before, after):
         response = self.app.get('/status?username=' + username)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json['previousPlayerUsername'], before)
-        self.assertEqual(response.get_json['nextPlayerUsername'], after)
+        self.assertEqual(response.get_json()['previousPlayerUsername'], before)
+        self.assertEqual(response.get_json()['nextPlayerUsername'], after)
 
     def test_helloWorldEndpoint(self):
         response = self.app.get('/')
@@ -28,7 +28,7 @@ class IntegrationTests(unittest.TestCase):
                                                         'name to your request to get started.')
 
     def test_canJoinByPostingUsername(self):
-        response = self.app.post('/join', data={'username': 'Mikey'})
+        response = self.app.post('/join', json={'username': 'Mikey'})
         self.assertEqual(response.status_code, 200)
 
     def test_cannotJoinWithoutAPostBody(self):
@@ -36,7 +36,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_canEraseTheGame(self):
-        response = self.app.post('/join', data={'username': 'Mikey'})
+        response = self.app.post('/join', json={'username': 'Mikey'})
         self.assertEqual(response.status_code, 200)
         response = self.app.post('/restart')
         self.assertEqual(response.status_code, 200)
@@ -44,11 +44,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_cannotJoinWithoutAUsername(self):
-        response = self.app.post('/join', data={'username': ''})
+        response = self.app.post('/join', json={'username': ''})
         self.assertEqual(response.status_code, 400)
 
     def test_canJoinAndAskGameForNextStep(self):
-        self.app.post('/join', data={'username': 'Mikey'})
+        self.app.post('/join', json={'username': 'Mikey'})
         self.assertStatusDescription(200, "SUBMIT_INITIAL_PHRASE", "Mikey")
 
     def test_getNextStepSays400IfYouHaveNotJoined(self):
@@ -81,7 +81,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_canPostInitialPhrase(self):
         self.addKirkAndSpock()
-        response = self.app.post('/phrase', data={'username': 'Kirk',
+        response = self.app.post('/phrase', json={'username': 'Kirk',
                                                   'phrase': 'Ever dance with the devil in the pale moonlight?'})
         self.assertEqual(response.status_code, 200)
         self.assertStatusDescription(200, "WAIT", "Kirk")
@@ -95,7 +95,7 @@ class IntegrationTests(unittest.TestCase):
     def test_cannotJoinAfterAllPlayersSubmitInitialPhrase(self):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()
-        response = self.app.post('/join', data={'username': 'Mikey'})
+        response = self.app.post('/join', json={'username': 'Mikey'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], "Cannot join a game in progress.")
 
@@ -113,13 +113,13 @@ class IntegrationTests(unittest.TestCase):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()
 
-        response = self.app.post('/phrase', data={'username': 'Spock', 'phrase': 'The devil is in the details.'})
+        response = self.app.post('/phrase', json={'username': 'Spock', 'phrase': 'The devil is in the details.'})
         self.assertEqual(response.status_code, 400)
 
     def test_cannotSubmitImageWhenItIsPhraseTime(self):
         self.addKirkAndSpock()
 
-        response = self.app.post('/image', data={'username': 'Spock',
+        response = self.app.post('/image', json={'username': 'Spock',
                                                  'image': 'spock image'})
         self.assertEqual(response.status_code, 400)
 
@@ -189,39 +189,39 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[2]['submissions'][2], "The devil is in the details.")
 
     def addKirkAndSpock(self):
-        self.app.post('/join', data={'username': 'Kirk'})
-        self.app.post('/join', data={'username': 'Spock'})
+        self.app.post('/join', json={'username': 'Kirk'})
+        self.app.post('/join', json={'username': 'Spock'})
 
     def addKirkBonesAndSpock(self):
         self.addKirkAndSpock()
-        self.app.post('/join', data={'username': 'Bones'})
+        self.app.post('/join', json={'username': 'Bones'})
 
     def addPhrasesForKirkAndSpock(self):
-        self.app.post('/phrase', data={'username': 'Kirk',
+        self.app.post('/phrase', json={'username': 'Kirk',
                                        'phrase': 'Ever dance with the devil in the pale moonlight?'})
-        self.app.post('/phrase', data={'username': 'Spock',
+        self.app.post('/phrase', json={'username': 'Spock',
                                        'phrase': 'The devil went down to Georgia.'})
 
     def addPhrasesForKirkBonesAndSpock(self):
         self.addPhrasesForKirkAndSpock()
-        self.app.post('/phrase', data={'username': 'Bones',
+        self.app.post('/phrase', json={'username': 'Bones',
                                        'phrase': 'That is devilishly clever.'})
 
     def addSecondPhrasesForKirkBonesAndSpock(self):
-        self.app.post('/phrase', data={'username': 'Spock',
+        self.app.post('/phrase', json={'username': 'Spock',
                                        'phrase': 'The devil is in the details.'})
-        self.app.post('/phrase', data={'username': 'Bones',
+        self.app.post('/phrase', json={'username': 'Bones',
                                        'phrase': 'What the devil does that mean?'})
-        self.app.post('/phrase', data={'username': 'Kirk',
+        self.app.post('/phrase', json={'username': 'Kirk',
                                        'phrase': 'The devil\'s drink!'})
 
     def addImagesForKirkAndSpock(self):
-        self.app.post('/image', data={'username': 'Kirk',
+        self.app.post('/image', json={'username': 'Kirk',
                                       'image': 'kirk image'})
-        self.app.post('/image', data={'username': 'Spock',
+        self.app.post('/image', json={'username': 'Spock',
                                       'image': 'spock image'})
 
     def addImagesForKirkBonesAndSpock(self):
         self.addImagesForKirkAndSpock()
-        self.app.post('/image', data={'username': 'Bones',
+        self.app.post('/image', json={'username': 'Bones',
                                       'image': 'bones image'})
