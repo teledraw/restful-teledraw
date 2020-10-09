@@ -38,7 +38,7 @@ def create_game(game_code):
     _games[game_code] = {'userStatuses': dict(), 'phrases': dict(), 'images': dict()}
 
 def err(message, statusCode=400):
-    return (jsonify({'error': message}), statusCode)
+    return jsonify({"error":message}), statusCode
 
 def create_app():
     app = Flask(__name__)
@@ -54,11 +54,11 @@ def create_app():
     @cross_origin()
     def join_game():
         if not request_includes_username(request):
-            return jsonify({'error': "Cannot join without a username."}), 400
+            return err("Cannot join without a username.")
         elif not request_includes_game_code(request):
-            return jsonify({'error': "Cannot join without a game code."}), 400
+            return err("Cannot join without a game code.")
         elif tooLateToJoin():
-            return jsonify({'error': "Cannot join a game in progress."}), 400
+            return err("Cannot join a game in progress.")
         else:
             _userStatuses[request.json['username']] = 'SUBMIT_INITIAL_PHRASE'
             if (request.json['game'] not in _games.keys()):
@@ -70,15 +70,15 @@ def create_app():
     @cross_origin()
     def get_status_for_player():
         if not args_includes_username(request):
-            return jsonify({'error': "Cannot get status without a username."}), 400
+            return err("Cannot get status without a username.")
         elif not args_includes_game_code(request):
-            return jsonify({'error': "Cannot get status without a game code."}), 400
+            return err("Cannot get status without a game code.")
         elif request.args['game'] not in _games.keys():
-            return jsonify({'error': 'No such game: "' + request.args['game'] + '"'}), 400
+            return err('No such game: "' + request.args['game'] + '".')
         elif request.args['username'] in _userStatuses.keys():
             return jsonify(get_user_status(request.args['username'])), 200
         else:
-            return '', 400
+            return err('Unexplained error getting status')
 
     def get_user_status(username):
         statusForUser = _userStatuses[username]
@@ -94,14 +94,14 @@ def create_app():
     @cross_origin()
     def submit_phrase():
         if not request_includes_username(request):
-            return jsonify({'error': 'Cannot submit phrase without a username.'}), 400
+            return err('Cannot submit phrase without a username.')
         elif not request_includes_game_code(request):
             return err('Cannot submit phrase without a game code.')
         elif request.json['game'] not in _games.keys():
-            return err('No such game: "' + request.json['game'] + '"')
+            return err('No such game: "' + request.json['game'] + '".')
         elif _userStatuses[request.json['username']] not in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]:
-            return jsonify({'error': 'Cannot submit phrase: it is not ' + request.json[
-                'username'] + '\'s turn to submit a phrase.'}), 400
+            return err('Cannot submit phrase: it is not ' + request.json[
+                'username'] + '\'s turn to submit a phrase.')
         if request.json['username'] in _userStatuses.keys():
             savePhrase(request.json['username'], request.json['phrase'])
             _userStatuses[request.json['username']] = "WAIT"
@@ -114,20 +114,20 @@ def create_app():
                 for user in _userStatuses.keys():
                     _userStatuses[user] = next_status
             return '', 200
-        return '', 400
+        return err('Unexplained error submitting phrase')
 
     @app.route('/image', methods=['POST'])
     @cross_origin()
     def submit_image():
         if not request_includes_username(request):
-            return jsonify({'error': 'Cannot submit image without a username.'}), 400
+            return err('Cannot submit image without a username.')
         elif not request_includes_game_code(request):
             return err('Cannot submit image without a game code.')
         elif request.json['game'] not in _games.keys():
-            return err('No such game: "' + request.json['game'] + '"')
+            return err('No such game: "' + request.json['game'] + '".')
         elif _userStatuses[request.json['username']] != "SUBMIT_IMAGE":
-            return jsonify({'error': 'Cannot submit image: it is not ' + request.json[
-                'username'] + '\'s turn to submit an image.'}), 400
+            return err('Cannot submit image: it is not ' + request.json[
+                'username'] + '\'s turn to submit an image.')
         elif request.json['username'] in _userStatuses.keys():
             saveImage(request.json['username'], request.json['image'])
             _userStatuses[request.json['username']] = "WAIT"
@@ -139,15 +139,15 @@ def create_app():
                 for user in _userStatuses.keys():
                     _userStatuses[user] = next_status
             return '', 200
-        return '', 400
+        return err('Unexplained error submitting image')
 
     @app.route('/summary', methods=['GET'])
     @cross_origin()
     def summary():
         if not args_includes_game_code(request):
-            return jsonify({'error': 'Cannot get summary without a game code.'}), 400
+            return err('Cannot get summary without a game code.')
         elif request.args['game'] not in _games.keys():
-            return jsonify({'error': 'No such game: "' + request.args['game'] + '"'}), 400
+            return err('No such game: "' + request.args['game'] + '".')
         else:
             status_summary = list()
             for user in _userStatuses.keys():
@@ -163,11 +163,11 @@ def create_app():
         if not args_includes_game_code(request):
             return err('Cannot get results without a game code.')
         elif request.args['game'] not in _games.keys():
-            return err('Cannot get results.  No such game: "' + request.args['game'] + '"')
+            return err('Cannot get results.  No such game: "' + request.args['game'] + '".')
         elif gameOver():
             return jsonify(getAllSubmissionThreadsByUser()), 200
         else:
-            return 'Cannot get results: game not over', 400
+            return err('Cannot get results: game not over.')
 
     @app.route('/restart', methods=['POST'])
     @cross_origin()
