@@ -103,14 +103,13 @@ def create_app():
             return err('Cannot submit phrase: it is not ' + request.json[
                 'username'] + '\'s turn to submit a phrase.')
         if request.json['username'] in _userStatuses.keys():
-            savePhrase(request.json['username'], request.json['phrase'])
-            _userStatuses[request.json['username']] = "WAIT"
+            savePhrase(request.json['username'], request.json['game'], request.json['phrase'])
+            set_user_status(request.json['username'], request.json['game'], "WAIT")
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
                 next_status = 'SUBMIT_IMAGE'
                 if gameOver():
                     next_status = 'GAME_OVER'
-
                 for user in _userStatuses.keys():
                     _userStatuses[user] = next_status
             return '', 200
@@ -129,8 +128,8 @@ def create_app():
             return err('Cannot submit image: it is not ' + request.json[
                 'username'] + '\'s turn to submit an image.')
         elif request.json['username'] in _userStatuses.keys():
-            saveImage(request.json['username'], request.json['image'])
-            _userStatuses[request.json['username']] = "WAIT"
+            saveImage(request.json['username'], request.json['game'], request.json['image'])
+            set_user_status(request.json['username'], request.json['game'], 'WAIT')
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
                 next_status = 'SUBMIT_PHRASE'
@@ -140,6 +139,10 @@ def create_app():
                     _userStatuses[user] = next_status
             return '', 200
         return err('Unexplained error submitting image')
+
+    def set_user_status(username, gamecode, new_status):
+        _userStatuses[username] = new_status
+        _games[gamecode]['userStatuses'][username] = new_status
 
     @app.route('/summary', methods=['GET'])
     @cross_origin()
@@ -205,11 +208,14 @@ def create_app():
     def args_includes_game_code(_request):
         return _request.args is not None and 'game' in _request.args.keys() and _request.args['game'] != ''
 
-    def savePhrase(username, phrase):
+    def savePhrase(username, gamecode, new_phrase):
         if (username not in _phrases.keys()):
-            _phrases[username] = [phrase]
+            _phrases[username] = [new_phrase]
+            _games[gamecode]['phrases'][username] = [new_phrase]
         else:
-            _phrases[username].append(phrase)
+            _phrases[username].append(new_phrase)
+            _games[gamecode]['phrases'][username].append(new_phrase)
+
 
     def getPhrasePrompt(username):
         users = list(_userStatuses.keys())
@@ -217,11 +223,13 @@ def create_app():
         usernameOfPhraseSource = users[(indexOfUser + 1) % len(users)]
         return _phrases[usernameOfPhraseSource][-1]
 
-    def saveImage(username, image):
+    def saveImage(username, gamecode, new_image):
         if (username not in _images.keys()):
-            _images[username] = [image]
+            _images[username] = [new_image]
+            _games[gamecode]['images'][username] = [new_image]
         else:
-            _images[username].append(image)
+            _images[username].append(new_image)
+            _games[gamecode]['images'][username].append(new_image)
 
     def getImagePrompt(username):
         users = list(_userStatuses.keys())

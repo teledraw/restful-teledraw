@@ -10,6 +10,9 @@ class IntegrationTests(unittest.TestCase):
         self.app.testing = True
         self.app.post("/restart")
 
+    def tearDown(self):
+        pass
+
     def assertPlayerStatus(self, statusCode=200, statusMessage="", username="", game="NCC-1701D", prompt="",
                            playerBefore="", playerAfter=""):
         response = self.app.get('/status?username=' + username + '&game=' + game)
