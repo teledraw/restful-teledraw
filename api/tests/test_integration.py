@@ -284,6 +284,34 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
         self.assertEqual(response.get_json()[2]['submissions'][2], "The devil is in the details.")
 
+    def test_canGetResultsAfterACompletedThreePlayerGame_DifferentSubmissionOrder(self):
+        self.addKirkBonesAndSpock()
+
+        self.post_phrase('Kirk', 'Ever dance with the devil in the pale moonlight?')
+        self.post_phrase('Spock', 'The devil went down to Georgia.')
+        self.post_phrase('Bones', 'That is devilishly clever.')
+        self.post_image("Kirk", "kirk image")
+        self.post_image("Spock", "spock image")
+        self.post_image("Bones", "bones image")
+
+        self.addSecondPhrasesForKirkBonesAndSpock()
+        response = self.get_results()
+        print(response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()[0]['originator'], "Kirk")
+        self.assertEqual(response.get_json()[0]['submissions'][0],
+                         "Ever dance with the devil in the pale moonlight?")
+        self.assertEqual(response.get_json()[0]['submissions'][1], "spock image")
+        self.assertEqual(response.get_json()[0]['submissions'][2], "What the devil does that mean?")
+        self.assertEqual(response.get_json()[1]['originator'], "Spock")
+        self.assertEqual(response.get_json()[1]['submissions'][0], "The devil went down to Georgia.")
+        self.assertEqual(response.get_json()[1]['submissions'][1], "bones image")
+        self.assertEqual(response.get_json()[1]['submissions'][2], "The devil's drink!")
+        self.assertEqual(response.get_json()[2]['originator'], "Bones")
+        self.assertEqual(response.get_json()[2]['submissions'][0], "That is devilishly clever.")
+        self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
+        self.assertEqual(response.get_json()[2]['submissions'][2], "The devil is in the details.")
+
     def addKirkAndSpock(self):
         self.app.post('/join', json={'username': 'Kirk', 'game': 'NCC-1701D'})
         self.app.post('/join', json={'username': 'Spock', 'game': 'NCC-1701D'})
