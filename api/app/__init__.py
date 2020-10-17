@@ -76,12 +76,12 @@ def create_app():
         elif request.args['game'] not in _games.keys():
             return err('No such game: "' + request.args['game'] + '".')
         elif request.args['username'] in _userStatuses.keys():
-            return jsonify(get_user_status(request.args['username'])), 200
+            return jsonify(get_user_status(request.args['username'], request.args['game'])), 200
         else:
             return err('Unexplained error getting status')
 
-    def get_user_status(username):
-        statusForUser = _userStatuses[username]
+    def get_user_status(username, gamecode):
+        statusForUser = _games[gamecode]['userStatuses'][username]
         if (statusForUser == 'SUBMIT_IMAGE' or statusForUser == 'SUBMIT_PHRASE'):
             return {'description': statusForUser,
                     'prompt': getPhrasePrompt(username) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
@@ -111,7 +111,7 @@ def create_app():
                 if gameOver():
                     next_status = 'GAME_OVER'
                 for user in _userStatuses.keys():
-                    _userStatuses[user] = next_status
+                    set_user_status(user, request.json['game'], next_status)
             return '', 200
         return err('Unexplained error submitting phrase')
 
@@ -136,7 +136,7 @@ def create_app():
                 if gameOver():
                     next_status = 'GAME_OVER'
                 for user in _userStatuses.keys():
-                    _userStatuses[user] = next_status
+                    set_user_status(user, request.json['game'], next_status)
             return '', 200
         return err('Unexplained error submitting image')
 
@@ -156,7 +156,7 @@ def create_app():
             for user in _userStatuses.keys():
                 user_status = dict()
                 user_status['username'] = user
-                user_status['status'] = get_user_status(user)
+                user_status['status'] = get_user_status(user, request.args['game'])
                 status_summary.append(user_status)
             return jsonify(status_summary), 200
 
