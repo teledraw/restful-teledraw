@@ -11,11 +11,11 @@ _phrases = dict()
 _images = dict()
 
 
-def gameOver():
+def gameOver(game):
     number_of_users = len(_userStatuses.keys())
-    for user in _userStatuses.keys():
-        if user not in _phrases.keys() or user not in _images.keys() or len(_phrases[user]) + len(
-                _images[user]) != number_of_users:
+    for user in _games[game]['userStatuses'].keys():
+        if user not in _games[game]['phrases'].keys() or user not in _games[game]['images'].keys() or len(_games[game]['phrases'][user]) + len(
+                _games[game]['images'][user]) != number_of_users:
             return False
     return number_of_users > 0
 
@@ -108,7 +108,7 @@ def create_app():
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
                 next_status = 'SUBMIT_IMAGE'
-                if gameOver():
+                if gameOver(request.json['game']):
                     next_status = 'GAME_OVER'
                 for user in _userStatuses.keys():
                     set_user_status(user, request.json['game'], next_status)
@@ -133,7 +133,7 @@ def create_app():
 
             if all(status == 'WAIT' for status in _userStatuses.values()):
                 next_status = 'SUBMIT_PHRASE'
-                if gameOver():
+                if gameOver(request.json['game']):
                     next_status = 'GAME_OVER'
                 for user in _userStatuses.keys():
                     set_user_status(user, request.json['game'], next_status)
@@ -167,7 +167,7 @@ def create_app():
             return err('Cannot get results without a game code.')
         elif request.args['game'] not in _games.keys():
             return err('Cannot get results.  No such game: "' + request.args['game'] + '".')
-        elif gameOver():
+        elif gameOver(request.args['game']):
             return jsonify(getAllSubmissionThreadsByUser()), 200
         else:
             return err('Cannot get results: game not over.')
