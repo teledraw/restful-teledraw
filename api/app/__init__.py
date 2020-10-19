@@ -88,14 +88,13 @@ def create_app():
     @app.route('/status', methods=['GET'])
     @cross_origin()
     def get_status_for_player():
-        if not args_includes_username(request):
-            return err("Cannot get status without a username.")
-        elif not args_includes_game_code(request):
-            return err("Cannot get status without a game code.")
-        elif request.args['game'] not in _games.keys():
-            return err('No such game: "' + request.args['game'] + '".')
-        elif request.args['username'] in _games[request.args['game']]['userStatuses'].keys():
-            return jsonify(get_user_status(request.args['username'], request.args['game'])), 200
+        (username, gamecode) = require_request_data(request, 'get player status')
+        if not username:
+            return gamecode
+        elif gamecode not in _games.keys():
+            return err('No such game: "' + gamecode + '".')
+        elif username in _games[gamecode]['userStatuses'].keys():
+            return jsonify(get_user_status(username, gamecode)), 200
         else:
             return err('Unexplained error getting status')
 
@@ -113,19 +112,18 @@ def create_app():
     @app.route('/phrase', methods=['POST'])
     @cross_origin()
     def submit_phrase():
-        if not request_includes_username(request):
-            return err('Cannot submit phrase without a username.')
-        elif not request_includes_game_code(request):
-            return err('Cannot submit phrase without a game code.')
-        elif request.json['game'] not in _games.keys():
-            return err('No such game: "' + request.json['game'] + '".')
-        elif _games[request.json['game']]['userStatuses'][request.json['username']] not in ["SUBMIT_INITIAL_PHRASE",
+        (username, gamecode) = require_request_data(request, 'submit phrase', inBody=True)
+        if not username:
+            return gamecode
+        elif gamecode not in _games.keys():
+            return err('No such game: "' + gamecode + '".')
+        elif _games[gamecode]['userStatuses'][username] not in ["SUBMIT_INITIAL_PHRASE",
                                                                                             "SUBMIT_PHRASE"]:
             return err('Cannot submit phrase: it is not ' + request.json[
                 'username'] + '\'s turn to submit a phrase.')
-        if request.json['username'] in _games[request.json['game']]['userStatuses'].keys():
-            savePhrase(request.json['username'], request.json['game'], request.json['phrase'])
-            set_user_status(request.json['username'], request.json['game'], "WAIT")
+        if username in _games[gamecode]['userStatuses'].keys():
+            savePhrase(username, gamecode, request.json['phrase'])
+            set_user_status(username, gamecode, "WAIT")
             return '', 200
         return err('Unexplained error submitting phrase')
 
@@ -133,7 +131,7 @@ def create_app():
     @cross_origin()
     def submit_image():
         (username, gamecode) = require_request_data(request, 'submit image', inBody=True)
-        if(not username):
+        if not username:
             return gamecode
         if gamecode not in _games.keys():
             return err('No such game: "' + gamecode + '".')
@@ -234,7 +232,7 @@ def create_app():
         return _games[gamecode]['images'][usernameOfImageSource][-1]
 
     def require_request_data(_request, forTask, variables=['username', 'game'], inBody=False):
-        data = _request.json if inBody else request.args
+        data = _request.json if inBody else _request.args
         for variable in variables:
             if (data is None or variable not in data.keys() or data[
                 variable] == ''):
