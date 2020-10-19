@@ -16,7 +16,7 @@ def gameOver(game):
     for user in _games[game]['userStatuses'].keys():
         if user not in _games[game]['phrases'].keys() or user not in _games[game]['images'].keys() or len(
                 _games[game]['phrases'][user]) + len(
-                _games[game]['images'][user]) != number_of_users:
+            _games[game]['images'][user]) != number_of_users:
             return False
     return number_of_users > 0
 
@@ -92,7 +92,8 @@ def create_app():
         statusForUser = _games[gamecode]['userStatuses'][username]
         if (statusForUser == 'SUBMIT_IMAGE' or statusForUser == 'SUBMIT_PHRASE'):
             return {'description': statusForUser,
-                    'prompt': getPhrasePrompt(username, gamecode) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
+                    'prompt': getPhrasePrompt(username,
+                                              gamecode) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
                         username, gamecode), 'previousPlayerUsername': getPreviousPlayer(username, gamecode),
                     'nextPlayerUsername': getNextPlayer(username, gamecode)}
         return {'description': statusForUser, 'previousPlayerUsername': getPreviousPlayer(username, gamecode),
@@ -113,13 +114,6 @@ def create_app():
         if request.json['username'] in _userStatuses.keys():
             savePhrase(request.json['username'], request.json['game'], request.json['phrase'])
             set_user_status(request.json['username'], request.json['game'], "WAIT")
-
-            if all(status == 'WAIT' for status in _userStatuses.values()):
-                next_status = 'SUBMIT_IMAGE'
-                if gameOver(request.json['game']):
-                    next_status = 'GAME_OVER'
-                for user in _userStatuses.keys():
-                    set_user_status(user, request.json['game'], next_status)
             return '', 200
         return err('Unexplained error submitting phrase')
 
@@ -138,19 +132,22 @@ def create_app():
         elif request.json['username'] in _userStatuses.keys():
             saveImage(request.json['username'], request.json['game'], request.json['image'])
             set_user_status(request.json['username'], request.json['game'], 'WAIT')
-
-            if all(status == 'WAIT' for status in _userStatuses.values()):
-                next_status = 'SUBMIT_PHRASE'
-                if gameOver(request.json['game']):
-                    next_status = 'GAME_OVER'
-                for user in _userStatuses.keys():
-                    set_user_status(user, request.json['game'], next_status)
             return '', 200
         return err('Unexplained error submitting image')
+
+    def update_status_if_all_players_done(gamecode):
+        if all(status == 'WAIT' for status in _games[gamecode]['userStatuses'].values()):
+            next_status = 'SUBMIT_PHRASE' if len(_games[gamecode]['images']) >= len(
+                _games[gamecode]['phrases']) else 'SUBMIT_IMAGE'
+            if gameOver(gamecode):
+                next_status = 'GAME_OVER'
+            for user in _games[gamecode]['userStatuses'].keys():
+                set_user_status(user, gamecode, next_status)
 
     def set_user_status(username, gamecode, new_status):
         _userStatuses[username] = new_status
         _games[gamecode]['userStatuses'][username] = new_status
+        update_status_if_all_players_done(gamecode)
 
     @app.route('/summary', methods=['GET'])
     @cross_origin()
