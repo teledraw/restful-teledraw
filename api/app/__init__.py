@@ -73,16 +73,15 @@ def create_app():
     @app.route('/join', methods=['POST'])
     @cross_origin()
     def join_game():
-        if not request_includes_username(request):
-            return err("Cannot join without a username.")
-        elif not request_includes_game_code(request):
-            return err("Cannot join without a game code.")
-        elif tooLateToJoin(request.json['game']):
+        (username, gamecode) = require_request_data(request, 'join game', inBody=True)
+        if not username:
+            return gamecode
+        elif tooLateToJoin(gamecode):
             return err("Cannot join a game in progress.")
         else:
-            if (request.json['game'] not in _games.keys()):
-                create_game(request.json['game'])
-            _games[request.json['game']]['userStatuses'][request.json['username']] = 'SUBMIT_INITIAL_PHRASE'
+            if (gamecode not in _games.keys()):
+                create_game(gamecode)
+            _games[gamecode]['userStatuses'][username] = 'SUBMIT_INITIAL_PHRASE'
             return '', 200
 
     @app.route('/status', methods=['GET'])
