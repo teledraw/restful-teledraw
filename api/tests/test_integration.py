@@ -86,12 +86,12 @@ class IntegrationTests(unittest.TestCase):
     def test_cannotJoinWithoutAUsername(self):
         response = self.app.post('/join', json={'game': 'XYZORG'})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()['error'], "Cannot join without a username.")
+        self.assertEqual(response.get_json()['error'], "Cannot join game: Missing username.")
 
     def test_cannotJoinWithoutPostingAGameName(self):
         response = self.app.post('/join', json={'username': 'Jimmy'})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()['error'], "Cannot join without a game code.")
+        self.assertEqual(response.get_json()['error'], "Cannot join game: Missing game.")
 
     def test_cannotGetStatusWithoutAUsername(self):
         self.addKirkAndSpock()
