@@ -44,6 +44,22 @@ def err(message, statusCode=400):
     return jsonify({"error": message}), statusCode
 
 
+def request_includes_game_code(_request):
+    return _request.json is not None and 'game' in _request.json.keys() and _request.json['game'] != ''
+
+
+def request_includes_username(_request):
+    return _request.json is not None and 'username' in _request.json.keys() and _request.json['username'] != ''
+
+
+def args_includes_username(_request):
+    return _request.args is not None and 'username' in _request.args.keys() and _request.args['username'] != ''
+
+
+def args_includes_game_code(_request):
+    return _request.args is not None and 'game' in _request.args.keys() and _request.args['game'] != ''
+
+
 def create_app():
     app = Flask(__name__)
     cors = CORS(app)
@@ -116,18 +132,16 @@ def create_app():
     @app.route('/image', methods=['POST'])
     @cross_origin()
     def submit_image():
-        if not request_includes_username(request):
-            return err('Cannot submit image without a username.')
-        elif not request_includes_game_code(request):
-            return err('Cannot submit image without a game code.')
-        elif request.json['game'] not in _games.keys():
-            return err('No such game: "' + request.json['game'] + '".')
-        elif _games[request.json['game']]['userStatuses'][request.json['username']] != "SUBMIT_IMAGE":
-            return err('Cannot submit image: it is not ' + request.json[
-                'username'] + '\'s turn to submit an image.')
-        elif request.json['username'] in _games[request.json['game']]['userStatuses'].keys():
-            saveImage(request.json['username'], request.json['game'], request.json['image'])
-            set_user_status(request.json['username'], request.json['game'], 'WAIT')
+        (username, gamecode) = require_request_data(request, 'submit image', inBody=True)
+        if(not username):
+            return gamecode
+        if gamecode not in _games.keys():
+            return err('No such game: "' + gamecode + '".')
+        elif _games[gamecode]['userStatuses'][username] != "SUBMIT_IMAGE":
+            return err('Cannot submit image: it is not ' + username + '\'s turn to submit an image.')
+        elif username in _games[gamecode]['userStatuses'].keys():
+            saveImage(username, gamecode, request.json['image'])
+            set_user_status(username, gamecode, 'WAIT')
             return '', 200
         return err('Unexplained error submitting image')
 
@@ -195,18 +209,6 @@ def create_app():
                     int(i / 2)])
         return toReturn
 
-    def request_includes_game_code(_request):
-        return _request.json is not None and 'game' in _request.json.keys() and _request.json['game'] != ''
-
-    def request_includes_username(_request):
-        return _request.json is not None and 'username' in _request.json.keys() and _request.json['username'] != ''
-
-    def args_includes_username(_request):
-        return _request.args is not None and 'username' in _request.args.keys() and _request.args['username'] != ''
-
-    def args_includes_game_code(_request):
-        return _request.args is not None and 'game' in _request.args.keys() and _request.args['game'] != ''
-
     def savePhrase(username, gamecode, new_phrase):
         if (username not in _games[gamecode]['phrases'].keys()):
             _games[gamecode]['phrases'][username] = [new_phrase]
@@ -230,6 +232,14 @@ def create_app():
         indexOfUser = users.index(username)
         usernameOfImageSource = users[(indexOfUser + 1) % len(users)]
         return _games[gamecode]['images'][usernameOfImageSource][-1]
+
+    def require_request_data(_request, forTask, variables=['username', 'game'], inBody=False):
+        data = _request.json if inBody else request.args
+        for variable in variables:
+            if (data is None or variable not in data.keys() or data[
+                variable] == ''):
+                return (False, err('Cannot ' + forTask + ': Missing ' + variable + '.'))
+        return (data[variable] for variable in variables)
 
     # enable flask test command
     # specify the test location for test discovery
