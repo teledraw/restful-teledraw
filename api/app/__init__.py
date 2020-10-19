@@ -6,10 +6,6 @@ from flask_cors import CORS, cross_origin
 
 _games = dict()
 
-_userStatuses = dict()
-_phrases = dict()
-_images = dict()
-
 
 def gameOver(game):
     number_of_users = len(_games[game]['userStatuses'].keys())
@@ -68,7 +64,6 @@ def create_app():
         elif tooLateToJoin(request.json['game']):
             return err("Cannot join a game in progress.")
         else:
-            _userStatuses[request.json['username']] = 'SUBMIT_INITIAL_PHRASE'
             if (request.json['game'] not in _games.keys()):
                 create_game(request.json['game'])
             _games[request.json['game']]['userStatuses'][request.json['username']] = 'SUBMIT_INITIAL_PHRASE'
@@ -83,7 +78,7 @@ def create_app():
             return err("Cannot get status without a game code.")
         elif request.args['game'] not in _games.keys():
             return err('No such game: "' + request.args['game'] + '".')
-        elif request.args['username'] in _userStatuses.keys():
+        elif request.args['username'] in _games[request.args['game']]['userStatuses'].keys():
             return jsonify(get_user_status(request.args['username'], request.args['game'])), 200
         else:
             return err('Unexplained error getting status')
@@ -108,10 +103,11 @@ def create_app():
             return err('Cannot submit phrase without a game code.')
         elif request.json['game'] not in _games.keys():
             return err('No such game: "' + request.json['game'] + '".')
-        elif _userStatuses[request.json['username']] not in ["SUBMIT_INITIAL_PHRASE", "SUBMIT_PHRASE"]:
+        elif _games[request.json['game']]['userStatuses'][request.json['username']] not in ["SUBMIT_INITIAL_PHRASE",
+                                                                                            "SUBMIT_PHRASE"]:
             return err('Cannot submit phrase: it is not ' + request.json[
                 'username'] + '\'s turn to submit a phrase.')
-        if request.json['username'] in _userStatuses.keys():
+        if request.json['username'] in _games[request.json['game']]['userStatuses'].keys():
             savePhrase(request.json['username'], request.json['game'], request.json['phrase'])
             set_user_status(request.json['username'], request.json['game'], "WAIT")
             return '', 200
@@ -126,10 +122,10 @@ def create_app():
             return err('Cannot submit image without a game code.')
         elif request.json['game'] not in _games.keys():
             return err('No such game: "' + request.json['game'] + '".')
-        elif _userStatuses[request.json['username']] != "SUBMIT_IMAGE":
+        elif _games[request.json['game']]['userStatuses'][request.json['username']] != "SUBMIT_IMAGE":
             return err('Cannot submit image: it is not ' + request.json[
                 'username'] + '\'s turn to submit an image.')
-        elif request.json['username'] in _userStatuses.keys():
+        elif request.json['username'] in _games[request.json['game']]['userStatuses'].keys():
             saveImage(request.json['username'], request.json['game'], request.json['image'])
             set_user_status(request.json['username'], request.json['game'], 'WAIT')
             return '', 200
@@ -145,7 +141,6 @@ def create_app():
                 set_user_status(user, gamecode, next_status)
 
     def set_user_status(username, gamecode, new_status):
-        _userStatuses[username] = new_status
         _games[gamecode]['userStatuses'][username] = new_status
         update_status_if_all_players_done(gamecode)
 
@@ -173,32 +168,31 @@ def create_app():
         elif request.args['game'] not in _games.keys():
             return err('Cannot get results.  No such game: "' + request.args['game'] + '".')
         elif gameOver(request.args['game']):
-            return jsonify(getAllSubmissionThreadsByUser()), 200
+            return jsonify(getAllSubmissionThreadsByUser(request.args['game'])), 200
         else:
             return err('Cannot get results: game not over.')
 
     @app.route('/restart', methods=['POST'])
     @cross_origin()
     def restart_game():
-        _userStatuses.clear()
-        _phrases.clear()
-        _images.clear()
         _games.clear()
         return '', 200
 
-    def getAllSubmissionThreadsByUser():
+    def getAllSubmissionThreadsByUser(gamecode):
         toReturn = list()
-        for user in _userStatuses.keys():
-            toReturn.append({"originator": user, "submissions": getUserSubmissionThread(user)})
+        for username in _games[gamecode]['userStatuses'].keys():
+            toReturn.append({"originator": username, "submissions": getUserSubmissionThread(username, gamecode)})
         return toReturn
 
-    def getUserSubmissionThread(username):
-        users = list(_userStatuses.keys())
+    def getUserSubmissionThread(username, gamecode):
+        users = list(_games[gamecode]['userStatuses'].keys())
         indexOfOriginalUser = users.index(username)
-        toReturn = [_phrases[username][0]]
-        for i in range(1, len(_userStatuses.keys())):
+        toReturn = [_games[gamecode]['phrases'][username][0]]
+        for i in range(1, len(users)):
             user = users[(indexOfOriginalUser + i) % len(users)]
-            toReturn.append(_phrases[user][int(i / 2)] if i % 2 == 0 else _images[user][int(i / 2)])
+            toReturn.append(
+                _games[gamecode]['phrases'][user][int(i / 2)] if i % 2 == 0 else _games[gamecode]['images'][user][
+                    int(i / 2)])
         return toReturn
 
     def request_includes_game_code(_request):
@@ -214,11 +208,9 @@ def create_app():
         return _request.args is not None and 'game' in _request.args.keys() and _request.args['game'] != ''
 
     def savePhrase(username, gamecode, new_phrase):
-        if (username not in _phrases.keys()):
-            _phrases[username] = [new_phrase]
+        if (username not in _games[gamecode]['phrases'].keys()):
             _games[gamecode]['phrases'][username] = [new_phrase]
         else:
-            _phrases[username].append(new_phrase)
             _games[gamecode]['phrases'][username].append(new_phrase)
 
     def getPhrasePrompt(username, gamecode):
@@ -228,11 +220,9 @@ def create_app():
         return _games[gamecode]['phrases'][usernameOfPhraseSource][-1]
 
     def saveImage(username, gamecode, new_image):
-        if (username not in _images.keys()):
-            _images[username] = [new_image]
+        if (username not in _games[gamecode]['images'].keys()):
             _games[gamecode]['images'][username] = [new_image]
         else:
-            _images[username].append(new_image)
             _games[gamecode]['images'][username].append(new_image)
 
     def getImagePrompt(username, gamecode):
