@@ -30,13 +30,13 @@ def tooLateToJoin(game):
         status == "SUBMIT_INITIAL_PHRASE" for status in list(_games[game]['userStatuses'].values()))
 
 
-def getNextPlayer(username):
-    usernames = list(_userStatuses.keys())
+def getNextPlayer(username, gamecode):
+    usernames = list(_games[gamecode]['userStatuses'].keys())
     return usernames[0] if usernames.index(username) == len(usernames) - 1 else usernames[usernames.index(username) + 1]
 
 
-def getPreviousPlayer(username):
-    usernames = list(_userStatuses.keys())
+def getPreviousPlayer(username, gamecode):
+    usernames = list(_games[gamecode]['userStatuses'].keys())
     return usernames[len(usernames) - 1] if usernames.index(username) == 0 else usernames[usernames.index(username) - 1]
 
 
@@ -92,11 +92,11 @@ def create_app():
         statusForUser = _games[gamecode]['userStatuses'][username]
         if (statusForUser == 'SUBMIT_IMAGE' or statusForUser == 'SUBMIT_PHRASE'):
             return {'description': statusForUser,
-                    'prompt': getPhrasePrompt(username) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
-                        username), 'previousPlayerUsername': getPreviousPlayer(username),
-                    'nextPlayerUsername': getNextPlayer(username)}
-        return {'description': statusForUser, 'previousPlayerUsername': getPreviousPlayer(username),
-                'nextPlayerUsername': getNextPlayer(username)}
+                    'prompt': getPhrasePrompt(username, gamecode) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
+                        username, gamecode), 'previousPlayerUsername': getPreviousPlayer(username, gamecode),
+                    'nextPlayerUsername': getNextPlayer(username, gamecode)}
+        return {'description': statusForUser, 'previousPlayerUsername': getPreviousPlayer(username, gamecode),
+                'nextPlayerUsername': getNextPlayer(username, gamecode)}
 
     @app.route('/phrase', methods=['POST'])
     @cross_origin()
@@ -161,7 +161,7 @@ def create_app():
             return err('No such game: "' + request.args['game'] + '".')
         else:
             status_summary = list()
-            for user in _userStatuses.keys():
+            for user in _games[request.args['game']]['userStatuses'].keys():
                 user_status = dict()
                 user_status['username'] = user
                 user_status['status'] = get_user_status(user, request.args['game'])
@@ -224,11 +224,11 @@ def create_app():
             _phrases[username].append(new_phrase)
             _games[gamecode]['phrases'][username].append(new_phrase)
 
-    def getPhrasePrompt(username):
-        users = list(_userStatuses.keys())
+    def getPhrasePrompt(username, gamecode):
+        users = list(_games[gamecode]['userStatuses'].keys())
         indexOfUser = users.index(username)
         usernameOfPhraseSource = users[(indexOfUser + 1) % len(users)]
-        return _phrases[usernameOfPhraseSource][-1]
+        return _games[gamecode]['phrases'][usernameOfPhraseSource][-1]
 
     def saveImage(username, gamecode, new_image):
         if (username not in _images.keys()):
@@ -238,11 +238,11 @@ def create_app():
             _images[username].append(new_image)
             _games[gamecode]['images'][username].append(new_image)
 
-    def getImagePrompt(username):
-        users = list(_userStatuses.keys())
+    def getImagePrompt(username, gamecode):
+        users = list(_games[gamecode]['userStatuses'].keys())
         indexOfUser = users.index(username)
         usernameOfImageSource = users[(indexOfUser + 1) % len(users)]
-        return _images[usernameOfImageSource][-1]
+        return _games[gamecode]['images'][usernameOfImageSource][-1]
 
     # enable flask test command
     # specify the test location for test discovery
