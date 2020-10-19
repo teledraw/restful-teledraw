@@ -12,16 +12,22 @@ _images = dict()
 
 
 def gameOver(game):
-    number_of_users = len(_userStatuses.keys())
+    number_of_users = len(_games[game]['userStatuses'].keys())
     for user in _games[game]['userStatuses'].keys():
-        if user not in _games[game]['phrases'].keys() or user not in _games[game]['images'].keys() or len(_games[game]['phrases'][user]) + len(
+        if user not in _games[game]['phrases'].keys() or user not in _games[game]['images'].keys() or len(
+                _games[game]['phrases'][user]) + len(
                 _games[game]['images'][user]) != number_of_users:
             return False
     return number_of_users > 0
 
 
-def tooLateToJoin():
-    return not all(status == "SUBMIT_INITIAL_PHRASE" for status in list(_userStatuses.values()))
+def game_exists(game):
+    return game in _games.keys()
+
+
+def tooLateToJoin(game):
+    return game_exists(game) and not all(
+        status == "SUBMIT_INITIAL_PHRASE" for status in list(_games[game]['userStatuses'].values()))
 
 
 def getNextPlayer(username):
@@ -37,8 +43,10 @@ def getPreviousPlayer(username):
 def create_game(game_code):
     _games[game_code] = {'userStatuses': dict(), 'phrases': dict(), 'images': dict()}
 
+
 def err(message, statusCode=400):
-    return jsonify({"error":message}), statusCode
+    return jsonify({"error": message}), statusCode
+
 
 def create_app():
     app = Flask(__name__)
@@ -57,7 +65,7 @@ def create_app():
             return err("Cannot join without a username.")
         elif not request_includes_game_code(request):
             return err("Cannot join without a game code.")
-        elif tooLateToJoin():
+        elif tooLateToJoin(request.json['game']):
             return err("Cannot join a game in progress.")
         else:
             _userStatuses[request.json['username']] = 'SUBMIT_INITIAL_PHRASE'
@@ -215,7 +223,6 @@ def create_app():
         else:
             _phrases[username].append(new_phrase)
             _games[gamecode]['phrases'][username].append(new_phrase)
-
 
     def getPhrasePrompt(username):
         users = list(_userStatuses.keys())
