@@ -95,11 +95,11 @@ class IntegrationTests(unittest.TestCase):
 
     def test_cannotGetStatusWithoutAUsername(self):
         self.addKirkAndSpock()
-        self.assertStatusError(errorMessage="Cannot get status without a username.", username="")
+        self.assertStatusError(errorMessage="Cannot get player status: Missing username.", username="")
 
     def test_cannotGetStatusWithoutAGameName(self):
         self.addKirkAndSpock()
-        self.assertStatusError(errorMessage="Cannot get status without a game code.", username="Kirk")
+        self.assertStatusError(errorMessage="Cannot get player status: Missing game.", username="Kirk")
 
     def test_canJoinAndAskGameForNextStep(self):
         self.addKirkAndSpock()
@@ -180,7 +180,7 @@ class IntegrationTests(unittest.TestCase):
         response = self.app.post('/phrase', json={'username': '', 'phrase': 'The devil is in the details.'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'],
-                         "Cannot submit phrase without a username.")
+                         "Cannot submit phrase: Missing username.")
 
     def test_cannotSubmitImageWhenItIsPhraseTime(self):
         self.addKirkAndSpock()
@@ -200,7 +200,7 @@ class IntegrationTests(unittest.TestCase):
     def test_cannotSubmitPhraseWithoutGameName(self):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()
-        self.assertPostPhraseError("Kirk", "roll the dice", error="Cannot submit phrase without a game code.")
+        self.assertPostPhraseError("Kirk", "roll the dice", error="Cannot submit phrase: Missing game.")
 
     def test_cannotSubmitImageWithoutGameName(self):
         self.addKirkAndSpock()
