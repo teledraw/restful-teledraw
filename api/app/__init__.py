@@ -43,23 +43,6 @@ def create_game(game_code):
 def err(message, statusCode=400):
     return jsonify({"error": message}), statusCode
 
-
-def request_includes_game_code(_request):
-    return _request.json is not None and 'game' in _request.json.keys() and _request.json['game'] != ''
-
-
-def request_includes_username(_request):
-    return _request.json is not None and 'username' in _request.json.keys() and _request.json['username'] != ''
-
-
-def args_includes_username(_request):
-    return _request.args is not None and 'username' in _request.args.keys() and _request.args['username'] != ''
-
-
-def args_includes_game_code(_request):
-    return _request.args is not None and 'game' in _request.args.keys() and _request.args['game'] != ''
-
-
 def create_app():
     app = Flask(__name__)
     cors = CORS(app)
@@ -175,12 +158,13 @@ def create_app():
     @app.route('/results', methods=['GET'])
     @cross_origin()
     def get_results():
-        if not args_includes_game_code(request):
-            return err('Cannot get results without a game code.')
-        elif request.args['game'] not in _games.keys():
-            return err('Cannot get results.  No such game: "' + request.args['game'] + '".')
-        elif gameOver(request.args['game']):
-            return jsonify(getAllSubmissionThreadsByUser(request.args['game'])), 200
+        (gamecode, error) = require_request_data(request, 'get endgame results', inBody=False, variables=['game'])
+        if not gamecode:
+            return error
+        elif gamecode not in _games.keys():
+            return err('Cannot get results.  No such game: "' + gamecode + '".')
+        elif gameOver(gamecode):
+            return jsonify(getAllSubmissionThreadsByUser(gamecode)), 200
         else:
             return err('Cannot get results: game not over.')
 
