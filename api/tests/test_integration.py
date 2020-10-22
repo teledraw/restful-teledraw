@@ -135,7 +135,7 @@ class IntegrationTests(unittest.TestCase):
         self.addKirkBonesAndSpock()
         response = self.app.get('/summary')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()['error'], "Cannot get summary without a game code.")
+        self.assertEqual(response.get_json()['error'], "Cannot get current summary: Missing game.")
 
     def test_summaryWarnsOfInvalidGameName(self):
         self.addKirkBonesAndSpock()
