@@ -9,6 +9,7 @@ import { useInterval } from "./hooks/interval";
 
 function App() {
   const [username, setUsername] = useState("");
+  const [gameCode, setGameCode] = useState("");
   const [apiStatus, setApiStatus] = useState("");
 
   useInterval(pollApiStatusOnce, 2000);
@@ -24,26 +25,27 @@ function App() {
   }
 
   function getApiStatus(){
-    return axios.get(getUrl() + '/status?username=' + username);
+    return axios.get(getUrl() + `/status?username=${username}&game=${gameCode}`);
   }
 
   function getResults(){
     return axios.get(getUrl() + '/results').then((response) => {return response.data});
   }
 
-  function usernameJoined(joinedUsername) {
-    axios.post(getUrl() + '/join', {username:joinedUsername});
+  function usernameJoined(joinedUsername, joinedGame) {
+    axios.post(getUrl() + '/join', {username:joinedUsername,game:joinedGame});
     setUsername(joinedUsername);
+    setGameCode(joinedGame);
     pollApiStatusOnce();
   }
 
   function phraseSubmitted(phrase) {
-    axios.post(getUrl() + '/phrase', {username:username, phrase:phrase})
+    axios.post(getUrl() + '/phrase', {username:username, phrase:phrase, game:gameCode});
     pollApiStatusOnce();
   }
 
   function artSubmitted(art) {
-    axios.post(getUrl() + '/image', {username:username, image:art})
+    axios.post(getUrl() + '/image', {username:username, image:art, game:gameCode});
     pollApiStatusOnce();
   }
 
@@ -86,7 +88,7 @@ function App() {
       case "GAME_OVER":
         return (
           <div className="App">
-            <Results/>
+            <Results gameCode={gameCode}/>
           </div>
         );
       case "WAIT":
