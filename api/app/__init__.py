@@ -40,8 +40,67 @@ def create_game(game_code):
     _games[game_code] = {'userStatuses': dict(), 'phrases': dict(), 'images': dict()}
 
 
-def err(message, statusCode=400):
-    return jsonify({"error": message}), statusCode
+def update_status_if_all_players_done(gamecode):
+    if all(status == 'WAIT' for status in _games[gamecode]['userStatuses'].values()):
+        next_status = 'SUBMIT_PHRASE' if len(_games[gamecode]['images']) >= len(
+            _games[gamecode]['phrases']) else 'SUBMIT_IMAGE'
+        if gameOver(gamecode):
+            next_status = 'GAME_OVER'
+        for user in _games[gamecode]['userStatuses'].keys():
+            set_user_status(user, gamecode, next_status)
+
+
+def set_user_status(username, gamecode, new_status):
+    _games[gamecode]['userStatuses'][username] = new_status
+    update_status_if_all_players_done(gamecode)
+
+
+def getAllSubmissionThreadsByUser(gamecode):
+    toReturn = list()
+    for username in _games[gamecode]['userStatuses'].keys():
+        toReturn.append({"originator": username, "submissions": getUserSubmissionThread(username, gamecode)})
+    return toReturn
+
+
+def getUserSubmissionThread(username, gamecode):
+    users = list(_games[gamecode]['userStatuses'].keys())
+    indexOfOriginalUser = users.index(username)
+    toReturn = [_games[gamecode]['phrases'][username][0]]
+    for i in range(1, len(users)):
+        user = users[(indexOfOriginalUser + i) % len(users)]
+        toReturn.append(
+            _games[gamecode]['phrases'][user][int(i / 2)] if i % 2 == 0 else _games[gamecode]['images'][user][
+                int(i / 2)])
+    return toReturn
+
+
+def savePhrase(username, gamecode, new_phrase):
+    if (username not in _games[gamecode]['phrases'].keys()):
+        _games[gamecode]['phrases'][username] = [new_phrase]
+    else:
+        _games[gamecode]['phrases'][username].append(new_phrase)
+
+
+def getPhrasePrompt(username, gamecode):
+    users = list(_games[gamecode]['userStatuses'].keys())
+    indexOfUser = users.index(username)
+    usernameOfPhraseSource = users[(indexOfUser + 1) % len(users)]
+    return _games[gamecode]['phrases'][usernameOfPhraseSource][-1]
+
+
+def saveImage(username, gamecode, new_image):
+    if (username not in _games[gamecode]['images'].keys()):
+        _games[gamecode]['images'][username] = [new_image]
+    else:
+        _games[gamecode]['images'][username].append(new_image)
+
+
+def getImagePrompt(username, gamecode):
+    users = list(_games[gamecode]['userStatuses'].keys())
+    indexOfUser = users.index(username)
+    usernameOfImageSource = users[(indexOfUser + 1) % len(users)]
+    return _games[gamecode]['images'][usernameOfImageSource][-1]
+
 
 def create_app():
     app = Flask(__name__)
@@ -125,19 +184,6 @@ def create_app():
             return '', 200
         return err('Unexplained error submitting image')
 
-    def update_status_if_all_players_done(gamecode):
-        if all(status == 'WAIT' for status in _games[gamecode]['userStatuses'].values()):
-            next_status = 'SUBMIT_PHRASE' if len(_games[gamecode]['images']) >= len(
-                _games[gamecode]['phrases']) else 'SUBMIT_IMAGE'
-            if gameOver(gamecode):
-                next_status = 'GAME_OVER'
-            for user in _games[gamecode]['userStatuses'].keys():
-                set_user_status(user, gamecode, next_status)
-
-    def set_user_status(username, gamecode, new_status):
-        _games[gamecode]['userStatuses'][username] = new_status
-        update_status_if_all_players_done(gamecode)
-
     @app.route('/summary', methods=['GET'])
     @cross_origin()
     def summary():
@@ -174,47 +220,6 @@ def create_app():
         _games.clear()
         return '', 200
 
-    def getAllSubmissionThreadsByUser(gamecode):
-        toReturn = list()
-        for username in _games[gamecode]['userStatuses'].keys():
-            toReturn.append({"originator": username, "submissions": getUserSubmissionThread(username, gamecode)})
-        return toReturn
-
-    def getUserSubmissionThread(username, gamecode):
-        users = list(_games[gamecode]['userStatuses'].keys())
-        indexOfOriginalUser = users.index(username)
-        toReturn = [_games[gamecode]['phrases'][username][0]]
-        for i in range(1, len(users)):
-            user = users[(indexOfOriginalUser + i) % len(users)]
-            toReturn.append(
-                _games[gamecode]['phrases'][user][int(i / 2)] if i % 2 == 0 else _games[gamecode]['images'][user][
-                    int(i / 2)])
-        return toReturn
-
-    def savePhrase(username, gamecode, new_phrase):
-        if (username not in _games[gamecode]['phrases'].keys()):
-            _games[gamecode]['phrases'][username] = [new_phrase]
-        else:
-            _games[gamecode]['phrases'][username].append(new_phrase)
-
-    def getPhrasePrompt(username, gamecode):
-        users = list(_games[gamecode]['userStatuses'].keys())
-        indexOfUser = users.index(username)
-        usernameOfPhraseSource = users[(indexOfUser + 1) % len(users)]
-        return _games[gamecode]['phrases'][usernameOfPhraseSource][-1]
-
-    def saveImage(username, gamecode, new_image):
-        if (username not in _games[gamecode]['images'].keys()):
-            _games[gamecode]['images'][username] = [new_image]
-        else:
-            _games[gamecode]['images'][username].append(new_image)
-
-    def getImagePrompt(username, gamecode):
-        users = list(_games[gamecode]['userStatuses'].keys())
-        indexOfUser = users.index(username)
-        usernameOfImageSource = users[(indexOfUser + 1) % len(users)]
-        return _games[gamecode]['images'][usernameOfImageSource][-1]
-
     def require_request_data(_request, forTask, variables=['username', 'game'], inBody=False):
         data = _request.json if inBody else _request.args
         for variable in variables:
@@ -225,6 +230,9 @@ def create_app():
         if len(toReturn) < 2:
             toReturn.append(False)
         return toReturn
+
+    def err(message, statusCode=400):
+        return jsonify({"error": message}), statusCode
 
     # enable flask test command
     # specify the test location for test discovery
