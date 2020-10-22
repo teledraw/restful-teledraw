@@ -6,6 +6,7 @@ import ImageForm from "./statecomponents/ImageForm.js";
 import Results from "./statecomponents/Results.js";
 import axios from "axios";
 import { useInterval } from "./hooks/interval";
+import IdentityPanel from "./helpercomponents/IdentityPanel";
 
 function App() {
   const [username, setUsername] = useState("");
@@ -60,6 +61,7 @@ function App() {
       case "SUBMIT_INITIAL_PHRASE":
         return (
           <div className="App">
+            <IdentityPanel username={username} gamecode={gameCode}/>
             <PhraseForm phraseSubmitted={phraseSubmitted}
                         nextUsername={apiStatus.nextPlayerUsername}/>
           </div>

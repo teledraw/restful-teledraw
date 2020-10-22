@@ -55,6 +55,20 @@ describe('shows the right stuff to the user', () => {
         });
     });
 
+    test("shows the identity panel when the API is in SUBMIT_INITIAL_PHRASE state", async (done) => {
+        axios.get = jest.fn(() => {
+            return {data: {description: "SUBMIT_INITIAL_PHRASE"}};
+
+        });
+        axios.post = jest.fn();
+        const {getByText} = joinGame();
+        await wait(() => {
+            getByText('Your Name: Billy');
+            getByText(`This Room's Code: TheClubhouse`);
+            done();
+        });
+    });
+
     test("shows the submit image form when the API is in SUBMIT_IMAGE state", async (done) => {
         axios.get = jest.fn(() => {
             return {
