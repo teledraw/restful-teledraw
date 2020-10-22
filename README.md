@@ -14,12 +14,11 @@ This repository contains a REST API and a simple exemplary frontend for playing 
 The API is a Flask app written in Python 3.8.  The frontend is a React app.  For more details, see api/Pipfile and ui/package.json respectively.
 
 ## Useful Backend Commands
-### To build the API
-In the API directory, use `./gradlew build`
-### To build the API
-In the API directory, use `./gradlew test`
+To use any of these, you'll need to first `pipenv install`
+### To test the API
+In the API directory, use `flask test`
 ### To run the API
-In the API directory, use `./gradlew bootRun`
+In the API directory, use `flask run`
 
 ## Useful Frontend Commands
 To use any of these, you'll need to first `npm install`
