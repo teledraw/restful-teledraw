@@ -50,6 +50,43 @@ function App() {
     pollApiStatusOnce();
   }
 
+  function getContentByStatus(status){
+    switch (status.description) {
+      case "SUBMIT_INITIAL_PHRASE":
+        return (
+              <PhraseForm phraseSubmitted={phraseSubmitted}
+                          nextUsername={status.nextPlayerUsername}/>
+        );
+      case "SUBMIT_PHRASE":
+        return (
+              <PhraseForm
+                  phraseSubmitted={phraseSubmitted}
+                  image={status.prompt}
+                  previousUsername={status.previousPlayerUsername}
+                  nextUsername={status.nextPlayerUsername}
+              />
+        );
+      case "SUBMIT_IMAGE":
+        return (
+              <ImageForm imageSubmitted={artSubmitted}
+                         phrase={status.prompt}
+                         previousUsername={status.previousPlayerUsername}
+                         nextUsername={status.nextPlayerUsername}
+              />
+        );
+      case "GAME_OVER":
+        return (
+              <Results gameCode={gameCode}/>
+        );
+      case "WAIT":
+        return (
+            "Waiting for other players...");
+      case "":
+      default:
+        return "Waiting for API...";
+    }
+  }
+
   if (username === "") {
     return (
       <div className="App">
@@ -57,51 +94,10 @@ function App() {
       </div>
     );
   } else {
-    switch (apiStatus.description) {
-      case "SUBMIT_INITIAL_PHRASE":
-        return (
-          <div className="App">
-            <IdentityPanel username={username} gamecode={gameCode}/>
-            <PhraseForm phraseSubmitted={phraseSubmitted}
-                        nextUsername={apiStatus.nextPlayerUsername}/>
-          </div>
-        );
-      case "SUBMIT_PHRASE":
-        return (
-          <div className="App">
-            <PhraseForm
-              phraseSubmitted={phraseSubmitted}
-              image={apiStatus.prompt}
-              previousUsername={apiStatus.previousPlayerUsername}
-              nextUsername={apiStatus.nextPlayerUsername}
-            />
-          </div>
-        );
-      case "SUBMIT_IMAGE":
-        return (
-          <div className="App">
-            <ImageForm imageSubmitted={artSubmitted}
-                       phrase={apiStatus.prompt}
-                       previousUsername={apiStatus.previousPlayerUsername}
-                       nextUsername={apiStatus.nextPlayerUsername}
-            />
-          </div>
-        );
-      case "GAME_OVER":
-        return (
-          <div className="App">
-            <Results gameCode={gameCode}/>
-          </div>
-        );
-      case "WAIT":
-        return (
-          <div className="App">
-            Waiting for other players...
-          </div>);
-      case "":
-      default:
-        return <div>Waiting for API...</div>;
-    }
+    return <div className={"App"}>
+      <IdentityPanel username={username} gamecode={gameCode}/>
+      {getContentByStatus(apiStatus)}
+    </div>
   }
 }
 export default App;

@@ -29,8 +29,95 @@ function submitPhrase(rendered) {
     return rendered;
 }
 
+describe('the example frontend', () => {
+    describe('shows the identity panel once a game is joined', () => {
 
-describe('shows the right stuff to the user', () => {
+        test("shows the identity panel when the API is in SUBMIT_INITIAL_PHRASE state", async (done) => {
+            axios.get = jest.fn(() => {
+                return {data: {description: "SUBMIT_INITIAL_PHRASE"}};
+
+            });
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                getByText('Your Name: Billy');
+                getByText(`This Room's Code: TheClubhouse`);
+                done();
+            });
+        });
+
+        test("shows the identity panel when the API is in SUBMIT_PHRASE state", async (done) => {
+            axios.get = jest.fn(() => {
+                return {data: {description: "SUBMIT_PHRASE"}};
+
+            });
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                getByText('Your Name: Billy');
+                getByText(`This Room's Code: TheClubhouse`);
+                done();
+            });
+        });
+
+        test("shows the identity panel when the API is in SUBMIT_IMAGE state", async (done) => {
+            axios.get = jest.fn(() => {
+                return {data: {description: "SUBMIT_IMAGE"}};
+
+            });
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                getByText('Your Name: Billy');
+                getByText(`This Room's Code: TheClubhouse`);
+                done();
+            });
+        });
+
+        test("shows the identity panel when the API is in WAIT state", async (done) => {
+            axios.get = jest.fn(() => {
+                return {data: {description: "WAIT"}};
+
+            });
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                getByText('Your Name: Billy');
+                getByText(`This Room's Code: TheClubhouse`);
+                done();
+            });
+        });
+
+        test("shows the identity panel when the API is in GAME_OVER state", async (done) => {
+            axios.get = jest.fn(() => {
+                return {data: {description: "GAME_OVER"}};
+
+            });
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                getByText('Your Name: Billy');
+                getByText(`This Room's Code: TheClubhouse`);
+                done();
+            });
+        });
+
+        test("shows the identity panel when the API is in undefined state", async (done) => {
+            axios.get = jest.fn(() => {
+                return {data: {description: ""}};
+
+            });
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                getByText('Your Name: Billy');
+                getByText(`This Room's Code: TheClubhouse`);
+                done();
+            });
+        });
+
+    });
+describe('shows the right content to the user based on state', () => {
     test("asks you to join the game with a username and game code", () => {
         const {getByText, getByLabelText} = render(<App/>);
         const headerText = getByText(/Join a Game/);
@@ -51,20 +138,6 @@ describe('shows the right stuff to the user', () => {
         const {getByText} = joinGame();
         await wait(() => {
             getByText('Submit a Phrase');
-            done();
-        });
-    });
-
-    test("shows the identity panel when the API is in SUBMIT_INITIAL_PHRASE state", async (done) => {
-        axios.get = jest.fn(() => {
-            return {data: {description: "SUBMIT_INITIAL_PHRASE"}};
-
-        });
-        axios.post = jest.fn();
-        const {getByText} = joinGame();
-        await wait(() => {
-            getByText('Your Name: Billy');
-            getByText(`This Room's Code: TheClubhouse`);
             done();
         });
     });
@@ -177,4 +250,4 @@ describe('sends the right stuff to the API', () => {
         });
     });
 });
-
+});
