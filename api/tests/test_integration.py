@@ -240,7 +240,7 @@ class IntegrationTests(unittest.TestCase):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()
         self.addImagesForKirkAndSpock()
-        self.assertResultsError('Cannot get results without a game code.', '')
+        self.assertResultsError('Cannot get endgame results: Missing game.', '')
 
     def test_cannotGetResultsWithoutValidGameCode(self):
         self.addKirkAndSpock()
