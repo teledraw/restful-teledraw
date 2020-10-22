@@ -117,7 +117,7 @@ def create_app():
         elif gamecode not in _games.keys():
             return err('No such game: "' + gamecode + '".')
         elif _games[gamecode]['userStatuses'][username] not in ["SUBMIT_INITIAL_PHRASE",
-                                                                                            "SUBMIT_PHRASE"]:
+                                                                "SUBMIT_PHRASE"]:
             return err('Cannot submit phrase: it is not ' + request.json[
                 'username'] + '\'s turn to submit a phrase.')
         if username in _games[gamecode]['userStatuses'].keys():
@@ -158,16 +158,17 @@ def create_app():
     @app.route('/summary', methods=['GET'])
     @cross_origin()
     def summary():
-        if not args_includes_game_code(request):
-            return err('Cannot get summary without a game code.')
-        elif request.args['game'] not in _games.keys():
-            return err('No such game: "' + request.args['game'] + '".')
+        (gamecode, error) = require_request_data(request, 'get current summary', inBody=False, variables=['game'])
+        if not gamecode:
+            return error
+        elif gamecode not in _games.keys():
+            return err('No such game: "' + gamecode + '".')
         else:
             status_summary = list()
-            for user in _games[request.args['game']]['userStatuses'].keys():
+            for user in _games[gamecode]['userStatuses'].keys():
                 user_status = dict()
                 user_status['username'] = user
-                user_status['status'] = get_user_status(user, request.args['game'])
+                user_status['status'] = get_user_status(user, gamecode)
                 status_summary.append(user_status)
             return jsonify(status_summary), 200
 
@@ -236,7 +237,10 @@ def create_app():
             if (data is None or variable not in data.keys() or data[
                 variable] == ''):
                 return (False, err('Cannot ' + forTask + ': Missing ' + variable + '.'))
-        return (data[variable] for variable in variables)
+        toReturn = list(data[variable] for variable in variables)
+        if len(toReturn) < 2:
+            toReturn.append(False)
+        return toReturn
 
     # enable flask test command
     # specify the test location for test discovery
