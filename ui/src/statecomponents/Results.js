@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios/index";
+import axios from "axios";
 import UserResultsSet from "../helpercomponents/UserResultsSet.js";
 import "../results.css";
 
