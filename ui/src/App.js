@@ -7,6 +7,7 @@ import Results from "./statecomponents/Results.js";
 import axios from "axios";
 import { useInterval } from "./hooks/interval";
 import IdentityPanel from "./helpercomponents/IdentityPanel";
+import AllPlayerStatusPanel from "./helpercomponents/AllPlayersStatusPanel";
 
 function App() {
   const [username, setUsername] = useState("");
@@ -48,6 +49,14 @@ function App() {
   function artSubmitted(art) {
     axios.post(getUrl() + '/image', {username:username, image:art, game:gameCode});
     pollApiStatusOnce();
+  }
+
+  function getStatusPanelByStatus(status){
+    if(status.description === "GAME_OVER"){
+      return <div></div>;
+    }else{
+      return <AllPlayerStatusPanel url={getUrl()+"/summary"} gamecode={gameCode} username={username}/>
+    }
   }
 
   function getContentByStatus(status){
@@ -94,9 +103,10 @@ function App() {
       </div>
     );
   } else {
-    return <div className={"App"}>
+    return <div className={"App in-play"}>
       <IdentityPanel username={username} gamecode={gameCode}/>
       {getContentByStatus(apiStatus)}
+      {getStatusPanelByStatus(apiStatus)}
     </div>
   }
 }
