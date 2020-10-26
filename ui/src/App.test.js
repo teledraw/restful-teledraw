@@ -47,10 +47,10 @@ describe('the example frontend', () => {
     }
 
     describe('the player status panel', () => {
-        axios.get = jest.fn(() => {
-            return {data: []}
-        });
         test('hits the summary endpoint with correct url', async (done) => {
+            axios.get = jest.fn(() => {
+                return {data: []}
+            });
             render(<AllPlayersStatusPanel url={"xyz.abc.com/summary"} gamecode={"TheClubhouse"} username={"Billy"}/>);
             await wait(() => {
                 expect(axios.get).toHaveBeenCalledWith("xyz.abc.com/summary?game=TheClubhouse");
@@ -63,17 +63,71 @@ describe('the example frontend', () => {
         test('shows GAME IN PROGRESS if joining is still possible', () => {
 
         });
-        test('shows player status when submitting phrases', () => {
-
+        test('shows player status when submitting phrases', async (done) => {
+            mockGets({description: "SUBMIT_PHRASE"}, [
+                {
+                    username: "Billy",
+                    status: {description: "SUBMIT_PHRASE"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "SUBMIT_PHRASE"}
+                }
+            ]);
+            axios.post = jest.fn();
+            const {queryByText, getByText} = joinGame();
+            await wait(() => {
+                expect(getByText('Submit a Phrase'));
+                expect(getByText(/Bobbie: Writing\.\.\./i));
+                expect(getByText(/Billy \(YOU\): Writing\.\.\./i));
+                done();
+            });
         });
-        test('shows player status when submitting images', () => {
-
+        test('shows player status when submitting images', async (done) => {
+            mockGets({description: "SUBMIT_IMAGE"}, [
+                {
+                    username: "Billy",
+                    status: {description: "SUBMIT_IMAGE"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "SUBMIT_IMAGE"}
+                },
+                {
+                    username: "Bibbie",
+                    status: {description: "WAIT"}
+                }
+            ]);
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                expect(getByText('Submit an Image'));
+                expect(getByText(/Bobbie: Drawing\.\.\./i));
+                expect(getByText(/Bibbie: Waiting\.\.\./i));
+                done();
+            });
         });
-        test('shows player status when waiting', () => {
-
+        test('shows player status when waiting', async (done) => {
+            mockGets({description: "WAIT"}, [
+                {
+                    username: "Billy",
+                    status: {description: "WAIT"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "SUBMIT_IMAGE"}
+                }
+            ]);
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                expect(getByText('Waiting for other players...'));
+                expect(getByText(/Bobbie: Drawing\.\.\./i));
+                done();
+            });
         });
         test('does not show on results screen', async (done) => {
-            mockGets({description: "GAME_OVER"},[
+            mockGets({description: "GAME_OVER"}, [
                 {
                     username: "Billy",
                     status: {description: "GAME_OVER"}
@@ -87,7 +141,7 @@ describe('the example frontend', () => {
             const {queryByText, getByText} = joinGame();
             await wait(() => {
                 expect(getByText('Game Over!'));
-                expect(queryByText(/Bobbie: GAME OVER/i)).not.toBeInTheDocument();
+                expect(queryByText(/Bobbie:/i)).not.toBeInTheDocument();
                 done();
             });
         });
@@ -194,10 +248,8 @@ describe('the example frontend', () => {
         });
 
         test("shows the submit phrase form when the API is in SUBMIT_INITIAL_PHRASE state", async (done) => {
-            axios.get = jest.fn(() => {
-                return {data: {description: "SUBMIT_INITIAL_PHRASE"}};
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"});
 
-            });
             axios.post = jest.fn();
             const {getByText} = joinGame();
             await wait(() => {
@@ -207,15 +259,11 @@ describe('the example frontend', () => {
         });
 
         test("shows the submit image form when the API is in SUBMIT_IMAGE state", async (done) => {
-            axios.get = jest.fn(() => {
-                return {
-                    data: {
+            mockGets({
                         description: "SUBMIT_IMAGE",
                         prompt: "Once upon a time",
                         previousPlayerUsername: "Tinkerbell"
-                    }
-                };
-            });
+                    });
             axios.post = jest.fn();
             const {getByText} = joinGame();
             await wait(() => {
@@ -225,9 +273,7 @@ describe('the example frontend', () => {
         });
 
         test("shows the wait dialogue when the API is in WAIT state", async (done) => {
-            axios.get = jest.fn(() => {
-                return {data: {description: "WAIT"}};
-            });
+            mockGets({description: "WAIT"});
             axios.post = jest.fn();
             const {getByText} = joinGame();
             await wait(() => {
@@ -239,9 +285,7 @@ describe('the example frontend', () => {
     describe('sends the right stuff to the API', () => {
         test("hits the join API endpoint when you submit the join form", async (done) => {
             axios.post = jest.fn();
-            axios.get = jest.fn(() => {
-                return {data: {description: "WAIT"}};
-            });
+            mockGets({description: "WAIT"});
             joinGame();
             await wait(() => {
                 expect(axios.post).toHaveBeenCalledWith("http://localhost:5000/join", {
@@ -254,9 +298,7 @@ describe('the example frontend', () => {
 
         test("hits the phrase API endpoint when you submit the phrase form", async (done) => {
             axios.post = jest.fn();
-            axios.get = jest.fn(() => {
-                return {data: {description: "SUBMIT_INITIAL_PHRASE"}};
-            });
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"});
             let {getByLabelText, getByText} = joinGame();
             await wait(() => {
                 const phraseInput = getByLabelText(/Your common phrase, saying, or word/);
@@ -280,9 +322,7 @@ describe('the example frontend', () => {
 
         test("hits the image API endpoint when you submit the image form", async (done) => {
             axios.post = jest.fn();
-            axios.get = jest.fn(() => {
-                return {data: {description: "SUBMIT_IMAGE"}};
-            });
+            mockGets({description: "SUBMIT_IMAGE"});
 
             const imageFile = new File(['imageXXXimageYYYimageZZZ'], 'teledraw.png', {
                 type: 'image/png',
