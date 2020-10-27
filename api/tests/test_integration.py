@@ -120,23 +120,36 @@ class IntegrationTests(unittest.TestCase):
         self.assertPlayerStatus(username="Spock", playerBefore="Kirk", playerAfter="Bones")
         self.assertPlayerStatus(username="Bones", playerBefore="Spock", playerAfter="Kirk")
 
-    def test_summaryEndpointCanSummarizeAtGameStart(self):
+    def test_summaryEndpointCanSummarizePlayersAtGameStart(self):
         self.addKirkBonesAndSpock()
         response = self.app.get('/summary?game=NCC-1701')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json[0]['username'], "Kirk")
-        self.assertEqual(response.json[1]['username'], "Spock")
-        self.assertEqual(response.json[2]['username'], "Bones")
-        self.assertEqual(response.json[0]['status']['description'], "SUBMIT_INITIAL_PHRASE")
-        self.assertEqual(response.json[1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
-        self.assertEqual(response.json[2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
+        self.assertEqual(response.json['players'][0]['username'], "Kirk")
+        self.assertEqual(response.json['players'][1]['username'], "Spock")
+        self.assertEqual(response.json['players'][2]['username'], "Bones")
+        self.assertEqual(response.json['players'][0]['status']['description'], "SUBMIT_INITIAL_PHRASE")
+        self.assertEqual(response.json['players'][1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
+        self.assertEqual(response.json['players'][2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
 
 
     def test_summaryIncludesOnlyStatusDescriptionsNotFullStatuses(self):
         self.addKirkBonesAndSpock()
         response = self.app.get('/summary?game=NCC-1701')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(list(response.json[0]['status'].keys()), ['description'])
+        self.assertEqual(list(response.json['players'][0]['status'].keys()), ['description'])
+
+    def test_summaryReportsJoinableGamePositively(self):
+        self.addKirkBonesAndSpock()
+        response = self.app.get('/summary?game=NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['canJoin'], True)
+
+    def test_summaryReportsJoinableGameNegatively(self):
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        response = self.app.get('/summary?game=NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['canJoin'], False)
 
     def test_summaryRequiresGameName(self):
         self.addKirkBonesAndSpock()
