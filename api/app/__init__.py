@@ -195,12 +195,14 @@ def create_app():
         elif gamecode not in _games.keys():
             return err('No such game: "' + gamecode + '".')
         else:
-            status_summary = list()
+            status_summary = dict()
+            status_summary['canJoin'] = not tooLateToJoin(gamecode)
+            status_summary['players'] = []
             for user in _games[gamecode]['userStatuses'].keys():
                 user_status = dict()
                 user_status['username'] = user
                 user_status['status'] = get_user_status(user, gamecode, just_the_status=True)
-                status_summary.append(user_status)
+                status_summary['players'].append(user_status)
             return jsonify(status_summary), 200
 
     @app.route('/results', methods=['GET'])
