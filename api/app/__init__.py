@@ -139,9 +139,11 @@ def create_app():
         else:
             return err('Unexplained error getting status')
 
-    def get_user_status(username, gamecode):
+    def get_user_status(username, gamecode, just_the_status=False):
         statusForUser = _games[gamecode]['userStatuses'][username]
-        if (statusForUser == 'SUBMIT_IMAGE' or statusForUser == 'SUBMIT_PHRASE'):
+        if(just_the_status):
+            return {'description':statusForUser}
+        elif (statusForUser == 'SUBMIT_IMAGE' or statusForUser == 'SUBMIT_PHRASE'):
             return {'description': statusForUser,
                     'prompt': getPhrasePrompt(username,
                                               gamecode) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
@@ -197,7 +199,7 @@ def create_app():
             for user in _games[gamecode]['userStatuses'].keys():
                 user_status = dict()
                 user_status['username'] = user
-                user_status['status'] = get_user_status(user, gamecode)
+                user_status['status'] = get_user_status(user, gamecode, just_the_status=True)
                 status_summary.append(user_status)
             return jsonify(status_summary), 200
 

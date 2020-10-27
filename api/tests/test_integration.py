@@ -131,6 +131,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json[1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
         self.assertEqual(response.json[2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
 
+
+    def test_summaryIncludesOnlyStatusDescriptionsNotFullStatuses(self):
+        self.addKirkBonesAndSpock()
+        response = self.app.get('/summary?game=NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.json[0]['status'].keys()), ['description'])
+
     def test_summaryRequiresGameName(self):
         self.addKirkBonesAndSpock()
         response = self.app.get('/summary')
