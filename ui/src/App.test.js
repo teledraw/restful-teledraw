@@ -32,14 +32,14 @@ function submitPhrase(rendered) {
 
 describe('the example frontend', () => {
 
-    function mockGets(statusData = {}, summaryData = [], resultsData = []) {
+    function mockGets(statusData = {}, summaryPlayers = [], resultsData = [], summaryIsJoinable=false) {
         axios.get = jest.fn((url) => {
             if (url.includes("status")) {
                 return {data: statusData};
             } else if (url.includes("summary")) {
                 return {
-                    data: summaryData
-                }
+                    data: {players:summaryPlayers, canJoin:summaryIsJoinable}
+                };
             } else if (url.includes("results")) {
                 return Promise.resolve({data: resultsData});
             }
@@ -48,20 +48,50 @@ describe('the example frontend', () => {
 
     describe('the player status panel', () => {
         test('hits the summary endpoint with correct url', async (done) => {
-            axios.get = jest.fn(() => {
-                return {data: []}
-            });
+            mockGets();
             render(<AllPlayersStatusPanel url={"xyz.abc.com/summary"} gamecode={"TheClubhouse"} username={"Billy"}/>);
             await wait(() => {
                 expect(axios.get).toHaveBeenCalledWith("xyz.abc.com/summary?game=TheClubhouse");
                 done();
             });
         });
-        test('shows GAME OPEN if joining is still possible', () => {
-
+        test('shows "Waiting for Players" if joining is still possible',  async (done) => {
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [
+                {
+                    username: "Billy",
+                    status: {description: "SUBMIT_INITIAL_PHRASE"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "SUBMIT_INITIAL_PHRASE"}
+                }
+            ], [], true);
+            axios.post = jest.fn();
+            const {queryByText, getByText} = joinGame();
+            await wait(() => {
+                expect(getByText('Submit a Phrase'));
+                expect(getByText(/Game Status: Waiting for Players/));
+                done();
+            });
         });
-        test('shows GAME IN PROGRESS if joining is still possible', () => {
-
+        test('shows "In Progress" if joining is not still possible',  async (done) => {
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [
+                {
+                    username: "Billy",
+                    status: {description: "SUBMIT_INITIAL_PHRASE"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "WAIT"}
+                }
+            ], [], false);
+            axios.post = jest.fn();
+            const {queryByText, getByText} = joinGame();
+            await wait(() => {
+                expect(getByText('Submit a Phrase'));
+                expect(getByText(/Game Status: In Progress/));
+                done();
+            });
         });
         test('shows player status when submitting phrases', async (done) => {
             mockGets({description: "SUBMIT_PHRASE"}, [
