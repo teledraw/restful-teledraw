@@ -59,6 +59,15 @@ function App() {
     }
   }
 
+  function getIdentityPanelByStatus(status) {
+    switch (status.description) {
+      case "GAME_OVER":
+        return <></>;
+      default:
+          return <IdentityPanel username={username} gamecode={gameCode}/>
+    }
+  }
+
   function getContentByStatus(status){
     switch (status.description) {
       case "SUBMIT_INITIAL_PHRASE":
@@ -104,7 +113,7 @@ function App() {
     );
   } else {
     return <div className={"App in-play"}>
-      <IdentityPanel username={username} gamecode={gameCode}/>
+      {getIdentityPanelByStatus(apiStatus)}
       {getContentByStatus(apiStatus)}
       {getStatusPanelByStatus(apiStatus)}
     </div>

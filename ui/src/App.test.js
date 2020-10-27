@@ -236,16 +236,22 @@ describe('the example frontend', () => {
             });
         });
 
-        test("shows the identity panel when the API is in GAME_OVER state", async (done) => {
-            axios.get = jest.fn(() => {
-                return {data: {description: "GAME_OVER"}};
-
-            });
+        test("does not show the identity panel when the API is in GAME_OVER state", async (done) => {
+            mockGets({description: "GAME_OVER"}, [
+                {
+                    username: "Billy",
+                    status: {description: "GAME_OVER"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "GAME_OVER"}
+                }
+            ]);
             axios.post = jest.fn();
-            const {getByText} = joinGame();
+            const {queryByText} = joinGame();
             await wait(() => {
-                getByText('Your Name: Billy');
-                getByText(`This Room's Code: TheClubhouse`);
+                expect(queryByText(/Your Name:/)).not.toBeInTheDocument();
+                expect(queryByText(/This Room's Code:/)).not.toBeInTheDocument();
                 done();
             });
         });
