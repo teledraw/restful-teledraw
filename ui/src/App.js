@@ -94,7 +94,7 @@ function App() {
         );
       case "GAME_OVER":
         return (
-              <Results gameCode={gameCode}/>
+              <Results url={getUrl() + "/results"} gameCode={gameCode}/>
         );
       case "WAIT":
         return (

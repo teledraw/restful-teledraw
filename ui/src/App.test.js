@@ -4,6 +4,7 @@ import App from "./App";
 import axios from "axios";
 import '@testing-library/jest-dom/extend-expect'
 import AllPlayersStatusPanel from "./helpercomponents/AllPlayersStatusPanel";
+import Results from "./statecomponents/Results";
 
 jest.mock("axios");
 
@@ -46,6 +47,16 @@ describe('the example frontend', () => {
         });
     }
 
+    describe('the results panel', () => {
+        test('hits the results endpoint with correct url', async (done) => {
+            mockGets();
+            render(<Results url={"xyz.abc.com/results"} gameCode={"TheClubhouse"}/>);
+            await wait(() => {
+                expect(axios.get).toHaveBeenCalledWith("xyz.abc.com/results?game=TheClubhouse");
+                done();
+            });
+        });
+    });
     describe('the player status panel', () => {
         test('hits the summary endpoint with correct url', async (done) => {
             mockGets();
