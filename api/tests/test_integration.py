@@ -316,7 +316,6 @@ class IntegrationTests(unittest.TestCase):
 
         self.addSecondPhrasesForKirkBonesAndSpock()
         response = self.get_results()
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()[0]['originator'], "Kirk")
         self.assertEqual(response.get_json()[0]['submissions'][0],
