@@ -130,7 +130,23 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['players'][0]['status']['description'], "SUBMIT_INITIAL_PHRASE")
         self.assertEqual(response.json['players'][1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
         self.assertEqual(response.json['players'][2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
+        self.assertEqual(response.json['phaseNumber'], 1)
 
+    def test_summaryEndpointCanSummarizePlayersAtGameEnd(self):
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        self.addImagesForKirkBonesAndSpock()
+        self.addSecondPhrasesForKirkBonesAndSpock()
+        response = self.app.get('/summary?game=NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['players'][0]['username'], "Kirk")
+        self.assertEqual(response.json['players'][1]['username'], "Spock")
+        self.assertEqual(response.json['players'][2]['username'], "Bones")
+        self.assertEqual(response.json['players'][0]['status']['description'], "GAME_OVER")
+        self.assertEqual(response.json['players'][1]['status']['description'], "GAME_OVER")
+        self.assertEqual(response.json['players'][2]['status']['description'], "GAME_OVER")
+        self.assertEqual(response.json['canJoin'], False)
+        self.assertEqual(response.json['phaseNumber'], 4)
 
     def test_summaryIncludesOnlyStatusDescriptionsNotFullStatuses(self):
         self.addKirkBonesAndSpock()
@@ -138,18 +154,21 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.json['players'][0]['status'].keys()), ['description'])
 
-    def test_summaryReportsJoinableGamePositively(self):
+    def test_summaryReportsJoinableGamePositivelyAtStart(self):
         self.addKirkBonesAndSpock()
         response = self.app.get('/summary?game=NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canJoin'], True)
 
-    def test_summaryReportsJoinableGameNegatively(self):
+
+    def test_summaryReportsJoinableGameNegativelyAfterPhaseOne(self):
         self.addKirkBonesAndSpock()
         self.addPhrasesForKirkBonesAndSpock()
         response = self.app.get('/summary?game=NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canJoin'], False)
+        self.assertEqual(response.json['phaseNumber'], 2)
+
 
     def test_summaryRequiresGameName(self):
         self.addKirkBonesAndSpock()

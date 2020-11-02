@@ -101,6 +101,16 @@ def getImagePrompt(username, gamecode):
     usernameOfImageSource = users[(indexOfUser + 1) % len(users)]
     return _games[gamecode]['images'][usernameOfImageSource][-1]
 
+def getPhaseNumber(gamecode):
+    if len(_games[gamecode]['phrases']) < 1:
+        return 1
+    elif len(_games[gamecode]['images']) < 1:
+        return 2
+    else:
+        completedPhraseRounds = len(_games[gamecode]['phrases'][min(_games[gamecode]['phrases'], key=len)])
+        completedImageRounds = len(_games[gamecode]['images'][min(_games[gamecode]['images'], key=len)])
+        return 1 + completedImageRounds + completedPhraseRounds
+
 
 def create_app():
     app = Flask(__name__)
@@ -197,6 +207,7 @@ def create_app():
         else:
             status_summary = dict()
             status_summary['canJoin'] = not tooLateToJoin(gamecode)
+            status_summary['phaseNumber'] = getPhaseNumber(gamecode)
             status_summary['players'] = []
             for user in _games[gamecode]['userStatuses'].keys():
                 user_status = dict()
