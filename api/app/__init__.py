@@ -7,7 +7,7 @@ from flask_cors import CORS, cross_origin
 _games = dict()
 
 
-def gameOver(game):
+def game_over(game):
     number_of_users = len(_games[game]['userStatuses'].keys())
     for user in _games[game]['userStatuses'].keys():
         if user not in _games[game]['phrases'].keys() or user not in _games[game]['images'].keys() or len(
@@ -21,17 +21,17 @@ def game_exists(game):
     return game in _games.keys()
 
 
-def tooLateToJoin(game):
+def too_late_to_join(game):
     return game_exists(game) and not all(
         status == "SUBMIT_INITIAL_PHRASE" for status in list(_games[game]['userStatuses'].values()))
 
 
-def getNextPlayer(username, gamecode):
+def get_next_player(username, gamecode):
     usernames = list(_games[gamecode]['userStatuses'].keys())
     return usernames[0] if usernames.index(username) == len(usernames) - 1 else usernames[usernames.index(username) + 1]
 
 
-def getPreviousPlayer(username, gamecode):
+def get_previous_player(username, gamecode):
     usernames = list(_games[gamecode]['userStatuses'].keys())
     return usernames[len(usernames) - 1] if usernames.index(username) == 0 else usernames[usernames.index(username) - 1]
 
@@ -44,7 +44,7 @@ def update_status_if_all_players_done(gamecode):
     if all(status == 'WAIT' for status in _games[gamecode]['userStatuses'].values()):
         next_status = 'SUBMIT_PHRASE' if len(_games[gamecode]['images']) >= len(
             _games[gamecode]['phrases']) else 'SUBMIT_IMAGE'
-        if gameOver(gamecode):
+        if game_over(gamecode):
             next_status = 'GAME_OVER'
         for user in _games[gamecode]['userStatuses'].keys():
             set_user_status(user, gamecode, next_status)
@@ -55,61 +55,61 @@ def set_user_status(username, gamecode, new_status):
     update_status_if_all_players_done(gamecode)
 
 
-def getAllSubmissionThreadsByUser(gamecode):
-    toReturn = list()
+def get_all_submission_threads_by_user(gamecode):
+    to_return = list()
     for username in _games[gamecode]['userStatuses'].keys():
-        toReturn.append({"originator": username, "submissions": getUserSubmissionThread(username, gamecode)})
-    return toReturn
+        to_return.append({"originator": username, "submissions": get_user_submission_thread(username, gamecode)})
+    return to_return
 
 
-def getUserSubmissionThread(username, gamecode):
+def get_user_submission_thread(username, gamecode):
     users = list(_games[gamecode]['userStatuses'].keys())
-    indexOfOriginalUser = users.index(username)
-    toReturn = [_games[gamecode]['phrases'][username][0]]
+    index_of_original_user = users.index(username)
+    to_return = [_games[gamecode]['phrases'][username][0]]
     for i in range(1, len(users)):
-        user = users[(indexOfOriginalUser + i) % len(users)]
-        toReturn.append(
+        user = users[(index_of_original_user + i) % len(users)]
+        to_return.append(
             _games[gamecode]['phrases'][user][int(i / 2)] if i % 2 == 0 else _games[gamecode]['images'][user][
                 int(i / 2)])
-    return toReturn
+    return to_return
 
 
-def savePhrase(username, gamecode, new_phrase):
+def save_phrase(username, gamecode, new_phrase):
     if (username not in _games[gamecode]['phrases'].keys()):
         _games[gamecode]['phrases'][username] = [new_phrase]
     else:
         _games[gamecode]['phrases'][username].append(new_phrase)
 
 
-def getPhrasePrompt(username, gamecode):
+def get_phrase_prompt(username, gamecode):
     users = list(_games[gamecode]['userStatuses'].keys())
-    indexOfUser = users.index(username)
-    usernameOfPhraseSource = users[(indexOfUser + 1) % len(users)]
-    return _games[gamecode]['phrases'][usernameOfPhraseSource][-1]
+    index_of_user = users.index(username)
+    username_of_phrase_source = users[(index_of_user + 1) % len(users)]
+    return _games[gamecode]['phrases'][username_of_phrase_source][-1]
 
 
-def saveImage(username, gamecode, new_image):
+def save_image(username, gamecode, new_image):
     if (username not in _games[gamecode]['images'].keys()):
         _games[gamecode]['images'][username] = [new_image]
     else:
         _games[gamecode]['images'][username].append(new_image)
 
 
-def getImagePrompt(username, gamecode):
+def get_image_prompt(username, gamecode):
     users = list(_games[gamecode]['userStatuses'].keys())
-    indexOfUser = users.index(username)
-    usernameOfImageSource = users[(indexOfUser + 1) % len(users)]
-    return _games[gamecode]['images'][usernameOfImageSource][-1]
+    index_of_user = users.index(username)
+    username_of_image_source = users[(index_of_user + 1) % len(users)]
+    return _games[gamecode]['images'][username_of_image_source][-1]
 
-def getPhaseNumber(gamecode):
+def get_phase_number(gamecode):
     if len(_games[gamecode]['phrases']) < 1:
         return 1
     elif len(_games[gamecode]['images']) < 1:
         return 2
     else:
-        completedPhraseRounds = len(_games[gamecode]['phrases'][min(_games[gamecode]['phrases'], key=len)])
-        completedImageRounds = len(_games[gamecode]['images'][min(_games[gamecode]['images'], key=len)])
-        return 1 + completedImageRounds + completedPhraseRounds
+        completed_phrase_rounds = len(_games[gamecode]['phrases'][min(_games[gamecode]['phrases'], key=len)])
+        completed_image_rounds = len(_games[gamecode]['images'][min(_games[gamecode]['images'], key=len)])
+        return 1 + completed_image_rounds + completed_phrase_rounds
 
 
 def create_app():
@@ -125,10 +125,10 @@ def create_app():
     @app.route('/join', methods=['POST'])
     @cross_origin()
     def join_game():
-        (username, gamecode) = require_request_data(request, 'join game', inBody=True)
+        (username, gamecode) = require_request_data(request, 'join game', in_body=True)
         if not username:
             return gamecode
-        elif tooLateToJoin(gamecode):
+        elif too_late_to_join(gamecode):
             return err("Cannot join a game in progress.")
         else:
             if (gamecode not in _games.keys()):
@@ -150,22 +150,22 @@ def create_app():
             return err('Unexplained error getting status')
 
     def get_user_status(username, gamecode, just_the_status=False):
-        statusForUser = _games[gamecode]['userStatuses'][username]
+        status_for_user = _games[gamecode]['userStatuses'][username]
         if(just_the_status):
-            return {'description':statusForUser}
-        elif (statusForUser == 'SUBMIT_IMAGE' or statusForUser == 'SUBMIT_PHRASE'):
-            return {'description': statusForUser,
-                    'prompt': getPhrasePrompt(username,
-                                              gamecode) if statusForUser == 'SUBMIT_IMAGE' else getImagePrompt(
-                        username, gamecode), 'previousPlayerUsername': getPreviousPlayer(username, gamecode),
-                    'nextPlayerUsername': getNextPlayer(username, gamecode)}
-        return {'description': statusForUser, 'previousPlayerUsername': getPreviousPlayer(username, gamecode),
-                'nextPlayerUsername': getNextPlayer(username, gamecode)}
+            return {'description':status_for_user}
+        elif (status_for_user == 'SUBMIT_IMAGE' or status_for_user == 'SUBMIT_PHRASE'):
+            return {'description': status_for_user,
+                    'prompt': get_phrase_prompt(username,
+                                                gamecode) if status_for_user == 'SUBMIT_IMAGE' else get_image_prompt(
+                        username, gamecode), 'previousPlayerUsername': get_previous_player(username, gamecode),
+                    'nextPlayerUsername': get_next_player(username, gamecode)}
+        return {'description': status_for_user, 'previousPlayerUsername': get_previous_player(username, gamecode),
+                'nextPlayerUsername': get_next_player(username, gamecode)}
 
     @app.route('/phrase', methods=['POST'])
     @cross_origin()
     def submit_phrase():
-        (username, gamecode) = require_request_data(request, 'submit phrase', inBody=True)
+        (username, gamecode) = require_request_data(request, 'submit phrase', in_body=True)
         if not username:
             return gamecode
         elif gamecode not in _games.keys():
@@ -175,7 +175,7 @@ def create_app():
             return err('Cannot submit phrase: it is not ' + request.json[
                 'username'] + '\'s turn to submit a phrase.')
         if username in _games[gamecode]['userStatuses'].keys():
-            savePhrase(username, gamecode, request.json['phrase'])
+            save_phrase(username, gamecode, request.json['phrase'])
             set_user_status(username, gamecode, "WAIT")
             return '', 200
         return err('Unexplained error submitting phrase')
@@ -183,7 +183,7 @@ def create_app():
     @app.route('/image', methods=['POST'])
     @cross_origin()
     def submit_image():
-        (username, gamecode) = require_request_data(request, 'submit image', inBody=True)
+        (username, gamecode) = require_request_data(request, 'submit image', in_body=True)
         if not username:
             return gamecode
         if gamecode not in _games.keys():
@@ -191,7 +191,7 @@ def create_app():
         elif _games[gamecode]['userStatuses'][username] != "SUBMIT_IMAGE":
             return err('Cannot submit image: it is not ' + username + '\'s turn to submit an image.')
         elif username in _games[gamecode]['userStatuses'].keys():
-            saveImage(username, gamecode, request.json['image'])
+            save_image(username, gamecode, request.json['image'])
             set_user_status(username, gamecode, 'WAIT')
             return '', 200
         return err('Unexplained error submitting image')
@@ -199,15 +199,15 @@ def create_app():
     @app.route('/summary', methods=['GET'])
     @cross_origin()
     def summary():
-        (gamecode, error) = require_request_data(request, 'get current summary', inBody=False, variables=['game'])
+        (gamecode, error) = require_request_data(request, 'get current summary', in_body=False, variables=['game'])
         if not gamecode:
             return error
         elif gamecode not in _games.keys():
             return err('No such game: "' + gamecode + '".')
         else:
             status_summary = dict()
-            status_summary['canJoin'] = not tooLateToJoin(gamecode)
-            status_summary['phaseNumber'] = getPhaseNumber(gamecode)
+            status_summary['canJoin'] = not too_late_to_join(gamecode)
+            status_summary['phaseNumber'] = get_phase_number(gamecode)
             status_summary['players'] = []
             for user in _games[gamecode]['userStatuses'].keys():
                 user_status = dict()
@@ -219,13 +219,13 @@ def create_app():
     @app.route('/results', methods=['GET'])
     @cross_origin()
     def get_results():
-        (gamecode, error) = require_request_data(request, 'get endgame results', inBody=False, variables=['game'])
+        (gamecode, error) = require_request_data(request, 'get endgame results', in_body=False, variables=['game'])
         if not gamecode:
             return error
         elif gamecode not in _games.keys():
             return err('Cannot get results.  No such game: "' + gamecode + '".')
-        elif gameOver(gamecode):
-            return jsonify(getAllSubmissionThreadsByUser(gamecode)), 200
+        elif game_over(gamecode):
+            return jsonify(get_all_submission_threads_by_user(gamecode)), 200
         else:
             return err('Cannot get results: game not over.')
 
@@ -235,19 +235,19 @@ def create_app():
         _games.clear()
         return '', 200
 
-    def require_request_data(_request, forTask, variables=['username', 'game'], inBody=False):
-        data = _request.json if inBody else _request.args
+    def require_request_data(_request, for_task, variables=['username', 'game'], in_body=False):
+        data = _request.json if in_body else _request.args
         for variable in variables:
             if (data is None or variable not in data.keys() or data[
                 variable] == ''):
-                return (False, err('Cannot ' + forTask + ': Missing ' + variable + '.'))
-        toReturn = list(data[variable] for variable in variables)
-        if len(toReturn) < 2:
-            toReturn.append(False)
-        return toReturn
+                return (False, err('Cannot ' + for_task + ': Missing ' + variable + '.'))
+        to_return = list(data[variable] for variable in variables)
+        if len(to_return) < 2:
+            to_return.append(False)
+        return to_return
 
-    def err(message, statusCode=400):
-        return jsonify({"error": message}), statusCode
+    def err(message, status_code=400):
+        return jsonify({"error": message}), status_code
 
     # enable flask test command
     # specify the test location for test discovery
