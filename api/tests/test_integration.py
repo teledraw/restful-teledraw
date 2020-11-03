@@ -130,7 +130,20 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['players'][0]['status']['description'], "SUBMIT_INITIAL_PHRASE")
         self.assertEqual(response.json['players'][1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
         self.assertEqual(response.json['players'][2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
-        self.assertEqual(response.json['phaseNumber'], 1)
+
+    def test_summaryEndpointCanSummarizePlayersMidRound(self):
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        self.post_image("Kirk", "kirk image")
+        response = self.app.get('/summary?game=NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['players'][0]['username'], "Kirk")
+        self.assertEqual(response.json['players'][1]['username'], "Spock")
+        self.assertEqual(response.json['players'][2]['username'], "Bones")
+        self.assertEqual(response.json['players'][0]['status']['description'], "WAIT")
+        self.assertEqual(response.json['players'][1]['status']['description'], "SUBMIT_IMAGE")
+        self.assertEqual(response.json['players'][2]['status']['description'], "SUBMIT_IMAGE")
+        self.assertEqual(response.json['phaseNumber'], 2)
 
     def test_summaryEndpointCanSummarizePlayersAtGameEnd(self):
         self.addKirkBonesAndSpock()
@@ -145,7 +158,6 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['players'][0]['status']['description'], "GAME_OVER")
         self.assertEqual(response.json['players'][1]['status']['description'], "GAME_OVER")
         self.assertEqual(response.json['players'][2]['status']['description'], "GAME_OVER")
-        self.assertEqual(response.json['canJoin'], False)
         self.assertEqual(response.json['phaseNumber'], 4)
 
     def test_summaryIncludesOnlyStatusDescriptionsNotFullStatuses(self):

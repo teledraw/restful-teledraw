@@ -102,9 +102,10 @@ def get_image_prompt(username, gamecode):
     return _games[gamecode]['images'][username_of_image_source][-1]
 
 def get_phase_number(gamecode):
-    if len(_games[gamecode]['phrases']) < 1:
+    current_number_of_players = len(_games[gamecode]['userStatuses'])
+    if len(_games[gamecode]['phrases']) < current_number_of_players:
         return 1
-    elif len(_games[gamecode]['images']) < 1:
+    elif len(_games[gamecode]['images']) < current_number_of_players:
         return 2
     else:
         completed_phrase_rounds = len(_games[gamecode]['phrases'][min(_games[gamecode]['phrases'], key=len)])
