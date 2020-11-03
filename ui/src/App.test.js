@@ -8,29 +8,6 @@ import Results from "./statecomponents/Results";
 
 jest.mock("axios");
 
-
-function joinGame() {
-    const rendered = render(<App/>);
-    const {getByText, getByLabelText} = rendered;
-    const usernameInput = getByLabelText(/Your Name/);
-    const gamecodeInput = getByLabelText(/Room Code/);
-    act(() => {
-        fireEvent.change(usernameInput, {target: {value: "Billy"}});
-        fireEvent.change(gamecodeInput, {target: {value: "TheClubhouse"}});
-    });
-    const submitButton = getByText("JOIN");
-    act(() => {
-        fireEvent.click(submitButton);
-    });
-    return rendered;
-}
-
-function submitPhrase(rendered) {
-    const {getByText, getByLabelText} = rendered;
-
-    return rendered;
-}
-
 describe('the example frontend', () => {
 
     function mockGets(statusData = {}, summaryPlayers = [], resultsData = [], summaryIsJoinable=false, summaryPhaseNumber=1) {
@@ -45,6 +22,22 @@ describe('the example frontend', () => {
                 return Promise.resolve({data: resultsData});
             }
         });
+    }
+
+    function joinGame() {
+        const rendered = render(<App/>);
+        const {getByText, getByLabelText} = rendered;
+        const usernameInput = getByLabelText(/Your Name/);
+        const gamecodeInput = getByLabelText(/Room Code/);
+        act(() => {
+            fireEvent.change(usernameInput, {target: {value: "Billy"}});
+            fireEvent.change(gamecodeInput, {target: {value: "TheClubhouse"}});
+        });
+        const submitButton = getByText("JOIN");
+        act(() => {
+            fireEvent.click(submitButton);
+        });
+        return rendered;
     }
 
     describe('the results panel', () => {
