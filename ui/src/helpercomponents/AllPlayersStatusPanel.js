@@ -4,7 +4,7 @@ import {useInterval} from "../hooks/interval";
 import axios from 'axios';
 
 export default function AllPlayerStatusPanel({url, gamecode, username}) {
-    const [summary, setSummary] = useState({players:[], canJoin:undefined});
+    const [summary, setSummary] = useState({players:[], canJoin:undefined, phaseNumber:undefined});
 
     async function getSummary(url, gamecode){
         const summaryResponse = await axios.get(url+'?game='+gamecode);
@@ -34,10 +34,18 @@ export default function AllPlayerStatusPanel({url, gamecode, username}) {
         }
     }
 
+    function transformPhaseNumberToHumanReadableWord(phaseNumber){
+        if(phaseNumber === undefined){
+            return "???";
+        }
+        else return phaseNumber;
+    }
+
     useInterval(() => {getSummary(url, gamecode)}, 2000);
 
     return <div className={"all-players-status"}>
         <div>Game Status: {transformJoinabilityToHumanReadablePhrase(summary['canJoin'])}</div>
+        <div>Round {transformPhaseNumberToHumanReadableWord(summary['phaseNumber'])} of {!summary['canJoin'] ? summary['players'].length : "???"}</div>
         <div>Players:</div>
         <ol>
         {summary['players'].map(player => {

@@ -33,13 +33,13 @@ function submitPhrase(rendered) {
 
 describe('the example frontend', () => {
 
-    function mockGets(statusData = {}, summaryPlayers = [], resultsData = [], summaryIsJoinable=false) {
+    function mockGets(statusData = {}, summaryPlayers = [], resultsData = [], summaryIsJoinable=false, summaryPhaseNumber=1) {
         axios.get = jest.fn((url) => {
             if (url.includes("status")) {
                 return {data: statusData};
             } else if (url.includes("summary")) {
                 return {
-                    data: {players:summaryPlayers, canJoin:summaryIsJoinable}
+                    data: {players:summaryPlayers, canJoin:summaryIsJoinable, phaseNumber:summaryPhaseNumber}
                 };
             } else if (url.includes("results")) {
                 return Promise.resolve({data: resultsData});
@@ -66,7 +66,7 @@ describe('the example frontend', () => {
                 done();
             });
         });
-        test('shows "Waiting for Players" if joining is still possible',  async (done) => {
+        test('shows "Waiting for Players" if joining is still possible and "???" for total rounds',  async (done) => {
             mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [
                 {
                     username: "Billy",
@@ -76,12 +76,13 @@ describe('the example frontend', () => {
                     username: "Bobbie",
                     status: {description: "SUBMIT_INITIAL_PHRASE"}
                 }
-            ], [], true);
+            ], [], true, 1);
             axios.post = jest.fn();
             const {queryByText, getByText} = joinGame();
             await wait(() => {
                 expect(getByText('Submit a Phrase'));
                 expect(getByText(/Game Status: Waiting for Players/));
+                expect(getByText("Round 1 of ???"));
                 done();
             });
         });
@@ -164,6 +165,24 @@ describe('the example frontend', () => {
             await wait(() => {
                 expect(getByText('Waiting for other players...'));
                 expect(getByText(/Bobbie: Drawing\.\.\./i));
+                done();
+            });
+        });
+        test('shows phase number from the API and max phase number based on # of players', async (done) => {
+            mockGets({description: "WAIT"}, [
+                {
+                    username: "Billy",
+                    status: {description: "WAIT"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "SUBMIT_IMAGE"}
+                }
+            ], [], false, 5);
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                expect(getByText('Round 5 of 2'));
                 done();
             });
         });
