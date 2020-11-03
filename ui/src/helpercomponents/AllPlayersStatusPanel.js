@@ -52,5 +52,7 @@ export default function AllPlayerStatusPanel({url, gamecode, username}) {
             return <li className={"other-player-status"} key={player.username}>{player.username + (player.username === username ? " (YOU): " : ": ") + transformStatusToHumanReadableWord(player.status.description)}</li>
         })}
         </ol>
+        {summary['canJoin'] && <div className={"start-warning"}>Warning: The first submission locks the game's player list.  Make sure all players are in before submitting!</div>}
+
     </div>;
 }

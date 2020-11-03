@@ -306,8 +306,32 @@ describe('the example frontend', () => {
 
         });
 
-        test("shows the submit phrase form when the API is in SUBMIT_INITIAL_PHRASE state", async (done) => {
+        test("shows the submit phrase form and warning when the API is in SUBMIT_INITIAL_PHRASE state and no one has submitted", async (done) => {
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"},[], [], true);
+
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                getByText('Submit a Phrase');
+                getByText(/Warning/);
+                done();
+            });
+        });
+
+        test("Game start warning disappears once someone has submitted", async (done) => {
             mockGets({description: "SUBMIT_INITIAL_PHRASE"});
+
+            axios.post = jest.fn();
+            const {getByText, queryByText} = joinGame();
+            await wait(() => {
+                getByText('Submit a Phrase');
+                expect(queryByText(/Warning/)).not.toBeInTheDocument();
+                done();
+            });
+        });
+
+        test("shows the submit phrase form when the API is in SUBMIT_PHRASE state", async (done) => {
+            mockGets({description: "SUBMIT_PHRASE"});
 
             axios.post = jest.fn();
             const {getByText} = joinGame();
