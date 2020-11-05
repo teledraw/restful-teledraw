@@ -362,6 +362,29 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
         self.assertEqual(response.get_json()[2]['submissions'][2], "The devil is in the details.")
 
+    def test_threePlayerGameInWhichPhrasesAreCorrectlyGuessed(self):
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        self.addImagesForKirkBonesAndSpock()
+        self.post_phrase('Bones', 'Ever dance with the devil in the pale moonlight?')
+        self.post_phrase('Kirk', 'The devil went down to Georgia.')
+        self.post_phrase('Spock', 'That is devilishly clever.')
+        response = self.get_results()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()[0]['originator'], "Kirk")
+        self.assertEqual(response.get_json()[0]['submissions'][0],
+                         "Ever dance with the devil in the pale moonlight?")
+        self.assertEqual(response.get_json()[0]['submissions'][1], "spock image")
+        self.assertEqual(response.get_json()[0]['submissions'][2], "Ever dance with the devil in the pale moonlight?")
+        self.assertEqual(response.get_json()[1]['originator'], "Spock")
+        self.assertEqual(response.get_json()[1]['submissions'][0], "The devil went down to Georgia.")
+        self.assertEqual(response.get_json()[1]['submissions'][1], "bones image")
+        self.assertEqual(response.get_json()[1]['submissions'][2], "The devil went down to Georgia.")
+        self.assertEqual(response.get_json()[2]['originator'], "Bones")
+        self.assertEqual(response.get_json()[2]['submissions'][0], "That is devilishly clever.")
+        self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
+        self.assertEqual(response.get_json()[2]['submissions'][2], "That is devilishly clever.")
+
     def test_canConductTwoGamesAtOnce(self):
         self.addKirkAndSpock()
         self.add_obrien_and_worf()
