@@ -42,8 +42,7 @@ def create_game(game_code):
 
 def update_status_if_all_players_done(gamecode):
     if all(status == 'WAIT' for status in _games[gamecode]['userStatuses'].values()):
-        next_status = 'SUBMIT_PHRASE' if len(_games[gamecode]['images']) >= len(
-            _games[gamecode]['phrases']) else 'SUBMIT_IMAGE'
+        next_status = 'SUBMIT_PHRASE' if get_phase_number(gamecode) % 2 == 1 else 'SUBMIT_IMAGE'
         if game_over(gamecode):
             next_status = 'GAME_OVER'
         for user in _games[gamecode]['userStatuses'].keys():
