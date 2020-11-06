@@ -120,6 +120,15 @@ class IntegrationTests(unittest.TestCase):
         self.assertPlayerStatus(username="Spock", playerBefore="Kirk", playerAfter="Bones")
         self.assertPlayerStatus(username="Bones", playerBefore="Spock", playerAfter="Kirk")
 
+    def test_statusEndpointCorrectlyIdentifiesPlayersBeforeAndAfterYou_5player(self):
+        self.addKirkBonesAndSpock()
+        self.add_obrien_and_worf(game='NCC-1701')
+        self.assertPlayerStatus(username="Kirk", playerBefore="Worf", playerAfter="Spock")
+        self.assertPlayerStatus(username="Spock", playerBefore="Kirk", playerAfter="Bones")
+        self.assertPlayerStatus(username="Bones", playerBefore="Spock", playerAfter="Obrien")
+        self.assertPlayerStatus(username="Obrien", playerBefore="Bones", playerAfter="Worf")
+        self.assertPlayerStatus(username="Worf", playerBefore="Obrien", playerAfter="Kirk")
+
     def test_summaryEndpointCanSummarizePlayersAtGameStart(self):
         self.addKirkBonesAndSpock()
         response = self.app.get('/summary?game=NCC-1701')
@@ -212,9 +221,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()['error'], "Cannot join a game in progress.")
 
     def test_imagePromptsIncludeProperPhrase(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.assertPlayerStatus("SUBMIT_IMAGE", "Kirk", prompt='The devil went down to Georgia.', statusCode=200)
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        self.assertPlayerStatus("SUBMIT_IMAGE", "Kirk", prompt='That is devilishly clever.', statusCode=200)
+        self.assertPlayerStatus("SUBMIT_IMAGE", "Spock", prompt='Ever dance with the devil in the pale moonlight?', statusCode=200)
+        self.assertPlayerStatus("SUBMIT_IMAGE", "Bones", prompt='The devil went down to Georgia.', statusCode=200)
 
     def test_cannotSubmitPhraseWhenItIsImageTime(self):
         self.addKirkAndSpock()
@@ -271,7 +282,7 @@ class IntegrationTests(unittest.TestCase):
         self.addPhrasesForKirkBonesAndSpock()
         self.addImagesForKirkBonesAndSpock()
 
-        self.assertPlayerStatus("SUBMIT_PHRASE", "Kirk", prompt='spock image')
+        self.assertPlayerStatus("SUBMIT_PHRASE", "Kirk", prompt='bones image')
 
     def test_statusIsGameOverForEveryoneAfterOneSubmissionPerPlayer(self):
         self.addKirkAndSpock()

@@ -82,8 +82,7 @@ def save_phrase(username, gamecode, new_phrase):
 
 def get_phrase_prompt(username, gamecode):
     users = list(_games[gamecode]['userStatuses'].keys())
-    index_of_user = users.index(username)
-    username_of_phrase_source = users[(index_of_user + 1) % len(users)]
+    username_of_phrase_source = get_previous_player(username, gamecode)
     return _games[gamecode]['phrases'][username_of_phrase_source][-1]
 
 
@@ -96,8 +95,7 @@ def save_image(username, gamecode, new_image):
 
 def get_image_prompt(username, gamecode):
     users = list(_games[gamecode]['userStatuses'].keys())
-    index_of_user = users.index(username)
-    username_of_image_source = users[(index_of_user + 1) % len(users)]
+    username_of_image_source = get_previous_player(username, gamecode)
     return _games[gamecode]['images'][username_of_image_source][-1]
 
 def get_phase_number(gamecode):
