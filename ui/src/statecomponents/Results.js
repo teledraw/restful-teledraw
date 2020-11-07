@@ -21,7 +21,7 @@ export default function Results({url, gameCode}) {
     <div className="flex-column-container">
       <div className="header">
         <h1>Game Over!</h1>
-        <div>(Are you winning, son?)</div>
+        <div>(To get to these results again later, use the room code and name you used to play.)</div>
       </div>
         {results.map((result) => {return getUserResultsSet(result)})}
     </div>
