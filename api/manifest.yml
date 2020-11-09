@@ -1,6 +1,7 @@
 ---
 applications:
   - name: arktika-api
+    buildpack: python_buildpack
     domain: 
     host: 
     env:
