@@ -138,7 +138,7 @@ describe('the example frontend', () => {
             await wait(() => {
                 expect(getByText('Submit an Image'));
                 expect(getByText(/Bobbie: Drawing\.\.\./i));
-                expect(getByText(/Bibbie: Waiting\.\.\./i));
+                expect(getByText(/Bibbie: Done for Now\.\.\./i));
                 done();
             });
         });

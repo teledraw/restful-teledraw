@@ -19,7 +19,7 @@ export default function AllPlayerStatusPanel({url, gamecode, username}) {
             case "SUBMIT_IMAGE":
                 return "Drawing...";
             case "WAIT":
-                return "Waiting...";
+                return "Done for Now...";
         }
     }
 
