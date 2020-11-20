@@ -75,7 +75,7 @@ describe('the example frontend', () => {
             await wait(() => {
                 expect(getByText('Submit a Phrase'));
                 expect(getByText(/Game Status: Waiting for Players/));
-                expect(getByText("Round 1 of ???"));
+                expect(getByText("Round: 1 of ???"));
                 done();
             });
         });
@@ -171,14 +171,34 @@ describe('the example frontend', () => {
                     username: "Bobbie",
                     status: {description: "SUBMIT_IMAGE"}
                 }
+            ], [], false, 1);
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                expect(getByText('Round: 1 of 2'));
+                done();
+            });
+        });
+
+        test('shows a special message if the phase number from the API is too high', async (done) => {
+            mockGets({description: "WAIT"}, [
+                {
+                    username: "Billy",
+                    status: {description: "WAIT"}
+                },
+                {
+                    username: "Bobbie",
+                    status: {description: "SUBMIT_IMAGE"}
+                }
             ], [], false, 5);
             axios.post = jest.fn();
             const {getByText} = joinGame();
             await wait(() => {
-                expect(getByText('Round 5 of 2'));
+                expect(getByText('Round: (Game Ending...)'));
                 done();
             });
         });
+
         test('does not show on results screen', async (done) => {
             mockGets({description: "GAME_OVER"}, [
                 {

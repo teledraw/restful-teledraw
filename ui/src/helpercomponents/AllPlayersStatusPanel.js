@@ -43,9 +43,18 @@ export default function AllPlayerStatusPanel({url, gamecode, username}) {
 
     useInterval(() => {getSummary(url, gamecode)}, 2000);
 
+    function getRoundNumberOrMessage(){
+        if(summary['phaseNumber'] > summary['players'].length){
+            return "(Game Ending...)"
+        }
+        else{
+            return (transformPhaseNumberToHumanReadableWord(summary['phaseNumber']) + " of " + (!summary['canJoin'] ? summary['players'].length : "???"));
+        }
+    }
+
     return <div className={"all-players-status"}>
         <div>Game Status: {transformJoinabilityToHumanReadablePhrase(summary['canJoin'])}</div>
-        <div>Round {transformPhaseNumberToHumanReadableWord(summary['phaseNumber'])} of {!summary['canJoin'] ? summary['players'].length : "???"}</div>
+        <div>Round: {getRoundNumberOrMessage()}</div>
         <div>Players:</div>
         <ol>
         {summary['players'].map(player => {
