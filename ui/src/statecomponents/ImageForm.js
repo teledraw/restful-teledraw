@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import DrawingToolSuggestionPanel from "../helpercomponents/DrawingToolSuggestionPanel";
 
 export default function ImageForm(props) {
+  const drawingToolUrls = ["https://jspaint.app","https://www.piskelapp.com", "https://pixlr.com/", "https://www.getpaint.net/"];
+
   const [image, setImage] = useState();
 
   function handleSubmit(event) {
@@ -23,6 +26,7 @@ export default function ImageForm(props) {
         <input type="file" accept="image/png" id="image-input" onChange={handleChange}/>
         <button onClick={handleSubmit}>UPLOAD</button>
       </form>
+      <DrawingToolSuggestionPanel toolUrls={drawingToolUrls}/>
     </div>
   );
 }

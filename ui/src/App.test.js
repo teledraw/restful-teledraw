@@ -363,16 +363,36 @@ describe('the example frontend', () => {
 
         test("shows the submit image form when the API is in SUBMIT_IMAGE state", async (done) => {
             mockGets({
-                        description: "SUBMIT_IMAGE",
-                        prompt: "Once upon a time",
-                        previousPlayerUsername: "Tinkerbell"
-                    });
+                description: "SUBMIT_IMAGE",
+                prompt: "Once upon a time",
+                previousPlayerUsername: "Tinkerbell"
+            });
             axios.post = jest.fn();
             const {getByText} = joinGame();
             await wait(() => {
                 getByText('Draw this phrase (from Tinkerbell): "Once upon a time"');
                 done();
             });
+        });
+
+        test("the drawing tool recommendations are shown when in the SUBMIT_IMAGE state", async (done) => {
+            mockGets({
+                description: "SUBMIT_IMAGE",
+                prompt: "Once upon a time",
+                previousPlayerUsername: "Tinkerbell"
+            });
+            axios.post = jest.fn();
+            const {getByText} = joinGame();
+            await wait(() => {
+                const suggestionInitiator = getByText('I need a drawing tool suggestion!');
+                act(() => {
+                    fireEvent.click(suggestionInitiator);
+                });
+                getByText("I'd like another suggestion please!");
+                getByText("https://jspaint.app");
+                done();
+            });
+
         });
 
         test("shows the wait dialogue when the API is in WAIT state", async (done) => {
