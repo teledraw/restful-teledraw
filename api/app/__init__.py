@@ -134,13 +134,20 @@ def create_app():
             _games[gamecode]['userStatuses'][username] = 'SUBMIT_INITIAL_PHRASE'
             return '', 200
 
-    @app.route('/status', methods=['GET'])
+    @app.route('/game/player/<path:username>', methods=['GET'])
     @cross_origin()
-    def get_status_for_player():
-        (username, gamecode) = require_request_data(request, 'get player status')
-        if not username:
-            return gamecode
-        elif gamecode not in _games.keys():
+    def statusRequiresGameCode(username):
+        return err('Cannot get player status for '+username+': missing game code.')
+
+    @app.route('/game/<path:gamecode>/player', methods=['GET'])
+    @cross_origin()
+    def statusRequiresUsername(gamecode):
+        return err('Cannot get player status: missing username.')
+
+    @app.route('/game/<path:gamecode>/player/<path:username>', methods=['GET'])
+    @cross_origin()
+    def get_status_for_player(gamecode, username):
+        if gamecode not in _games.keys():
             return err('No such game: "' + gamecode + '".')
         elif username in _games[gamecode]['userStatuses'].keys():
             return jsonify(get_user_status(username, gamecode)), 200

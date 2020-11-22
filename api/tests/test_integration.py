@@ -15,7 +15,7 @@ class IntegrationTests(unittest.TestCase):
 
     def assertPlayerStatus(self, statusMessage="", username="", game="NCC-1701", prompt="", playerBefore="",
                            playerAfter="", statusCode=200):
-        response = self.app.get('/status?username=' + username + '&game=' + game)
+        response = self.app.get('/game/'+game+'/player/'+username)
         self.assertEqual(response.status_code, statusCode)
         if (statusMessage):
             self.assertEqual(response.get_json()['description'], statusMessage)
@@ -55,7 +55,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()['error'], error)
 
     def assertStatusError(self, errorMessage="", username="", game=""):
-        response = self.app.get('/status?username=' + username + '&game=' + game)
+        url = ('/game/' + ((game + '/') if len(game) > 0 else "")) + ('player' + (('/' + username) if len(username) > 0 else ""))
+        response = self.app.get(url)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], errorMessage)
 
@@ -78,7 +79,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         response = self.app.post('/restart')
         self.assertEqual(response.status_code, 200)
-        response = self.app.get('/status?username=Mikey&game=gamey')
+        response = self.app.get('/game/gamey/player/Mikey')
         self.assertEqual(response.status_code, 400)
         self.assertTrue(response.json and 'error' in response.json.keys())
         self.assertEqual(response.json['error'], 'No such game: "gamey".')
@@ -95,19 +96,18 @@ class IntegrationTests(unittest.TestCase):
 
     def test_cannotGetStatusWithoutAUsername(self):
         self.addKirkAndSpock()
-        self.assertStatusError(errorMessage="Cannot get player status: Missing username.", username="")
+        self.assertStatusError(errorMessage="Cannot get player status: missing username.", username="", game="NCC-1701")
 
     def test_cannotGetStatusWithoutAGameName(self):
         self.addKirkAndSpock()
-        self.assertStatusError(errorMessage="Cannot get player status: Missing game.", username="Kirk")
+        self.assertStatusError(errorMessage="Cannot get player status for Kirk: missing game code.", username="Kirk")
 
     def test_canJoinAndAskGameForNextStep(self):
         self.addKirkAndSpock()
         self.assertPlayerStatus("SUBMIT_INITIAL_PHRASE", "Kirk")
 
     def test_getNextStepSays400IfYouHaveNotJoined(self):
-        response = self.app.get('/status?username=Mikey')
-        self.assertEqual(response.status_code, 400)
+        self.assertStatusError('No such game: "abc".', "Mikey", "abc")
 
     def test_statusEndpointCorrectlyIdentifiesPlayersBeforeAndAfterYou_2player(self):
         self.addKirkAndSpock()
