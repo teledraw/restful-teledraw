@@ -31,9 +31,9 @@ class IntegrationTests(unittest.TestCase):
 
     def get_results(self, game="NCC-1701"):
         if game:
-            return self.app.get("/results?game=" + game)
+            return self.app.get("/game/" + game + "/results")
         else:
-            return self.app.get("/results")
+            return self.app.get("/game/results")
 
     def assertResultsError(self, error, game="NCC-1701", statusCode=400):
         response = self.get_results(game)
@@ -300,7 +300,7 @@ class IntegrationTests(unittest.TestCase):
         self.addKirkAndSpock()
         self.addPhrasesForKirkAndSpock()
         self.addImagesForKirkAndSpock()
-        self.assertResultsError('Cannot get endgame results: Missing game.', '')
+        self.assertResultsError('Cannot get results: missing game code.', '')
 
     def test_cannotGetResultsWithoutValidGameCode(self):
         self.addKirkAndSpock()

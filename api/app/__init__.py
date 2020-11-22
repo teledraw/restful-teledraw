@@ -217,13 +217,16 @@ def create_app():
                 status_summary['players'].append(user_status)
             return jsonify(status_summary), 200
 
-    @app.route('/results', methods=['GET'])
+    @app.route('/game/results', methods=['GET'])
     @cross_origin()
-    def get_results():
-        (gamecode, error) = require_request_data(request, 'get endgame results', in_body=False, variables=['game'])
-        if not gamecode:
-            return error
-        elif gamecode not in _games.keys():
+    def resultsRequiresGameCode():
+        return err('Cannot get results: missing game code.')
+
+    @app.route('/game/<path:game>/results', methods=['GET'])
+    @cross_origin()
+    def get_results(game):
+        gamecode = game
+        if gamecode not in _games.keys():
             return err('Cannot get results.  No such game: "' + gamecode + '".')
         elif game_over(gamecode):
             return jsonify(get_all_submission_threads_by_user(gamecode)), 200
