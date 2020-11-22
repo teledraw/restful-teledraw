@@ -194,13 +194,16 @@ def create_app():
             return '', 200
         return err('Unexplained error submitting image')
 
-    @app.route('/summary', methods=['GET'])
+    @app.route('/game', methods=['GET'])
     @cross_origin()
-    def summary():
-        (gamecode, error) = require_request_data(request, 'get current summary', in_body=False, variables=['game'])
-        if not gamecode:
-            return error
-        elif gamecode not in _games.keys():
+    def summaryRequiresGameCode():
+        return err('Cannot get current summary: missing game code.')
+
+    @app.route('/game/<path:game>', methods=['GET'])
+    @cross_origin()
+    def summary(game):
+        gamecode = game
+        if gamecode not in _games.keys():
             return err('No such game: "' + gamecode + '".')
         else:
             status_summary = dict()
