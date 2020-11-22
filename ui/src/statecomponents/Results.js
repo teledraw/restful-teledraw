@@ -3,11 +3,11 @@ import axios from "axios";
 import UserResultsSet from "../helpercomponents/UserResultsSet.js";
 import "../results.css";
 
-export default function Results({url, gameCode}) {
+export default function Results({baseUrl, gameCode}) {
 
   const [results, setResults] = useState([]);
 
-  useEffect(() => {axios.get(`${url}?game=${gameCode}`)
+  useEffect(() => {axios.get(`${baseUrl}/game/${gameCode}/results`)
   .then((response) => {setResults(response.data)})}, []);
 
     function getUserResultsSet(result) {

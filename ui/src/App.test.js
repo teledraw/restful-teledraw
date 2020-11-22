@@ -12,14 +12,15 @@ describe('the example frontend', () => {
 
     function mockGets(statusData = {}, summaryPlayers = [], resultsData = [], summaryIsJoinable=false, summaryPhaseNumber=1) {
         axios.get = jest.fn((url) => {
-            if (url.includes("status")) {
+            if (url.match("\/game\/.*\/player\/.*")) {
                 return {data: statusData};
-            } else if (url.includes("summary")) {
+            } else if (url.includes("results")) {
+                return Promise.resolve({data: resultsData});
+            }
+            else if (url.match("\/game\/.*")) {
                 return {
                     data: {players:summaryPlayers, canJoin:summaryIsJoinable, phaseNumber:summaryPhaseNumber}
                 };
-            } else if (url.includes("results")) {
-                return Promise.resolve({data: resultsData});
             }
         });
     }
@@ -43,9 +44,9 @@ describe('the example frontend', () => {
     describe('the results panel', () => {
         test('hits the results endpoint with correct url', async (done) => {
             mockGets();
-            render(<Results url={"xyz.abc.com/results"} gameCode={"TheClubhouse"}/>);
+            render(<Results baseUrl={"xyz.abc.com"} gameCode={"TheClubhouse"}/>);
             await wait(() => {
-                expect(axios.get).toHaveBeenCalledWith("xyz.abc.com/results?game=TheClubhouse");
+                expect(axios.get).toHaveBeenCalledWith("xyz.abc.com/game/TheClubhouse/results");
                 done();
             });
         });
@@ -53,9 +54,9 @@ describe('the example frontend', () => {
     describe('the player status panel', () => {
         test('hits the summary endpoint with correct url', async (done) => {
             mockGets();
-            render(<AllPlayersStatusPanel url={"xyz.abc.com/summary"} gamecode={"TheClubhouse"} username={"Billy"}/>);
+            render(<AllPlayersStatusPanel baseUrl={"xyz.abc.com"} gamecode={"TheClubhouse"} username={"Billy"}/>);
             await wait(() => {
-                expect(axios.get).toHaveBeenCalledWith("xyz.abc.com/summary?game=TheClubhouse");
+                expect(axios.get).toHaveBeenCalledWith("xyz.abc.com/game/TheClubhouse");
                 done();
             });
         });

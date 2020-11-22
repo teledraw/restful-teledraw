@@ -18,7 +18,7 @@ function App() {
 
   async function pollApiStatusOnce(){
     if(username === "") return;
-    const status = await getApiStatus();
+    const status = await getApiStatusForPlayer();
     setApiStatus(status.data);
   }
 
@@ -26,12 +26,8 @@ function App() {
     return process.env.REACT_APP_API_URL;
   }
 
-  function getApiStatus(){
-    return axios.get(getUrl() + `/status?username=${username}&game=${gameCode}`);
-  }
-
-  function getResults(){
-    return axios.get(getUrl() + '/results').then((response) => {return response.data});
+  function getApiStatusForPlayer(){
+    return axios.get(getUrl() + `/game/${gameCode}/player/${username}`);
   }
 
   function usernameJoined(joinedUsername, joinedGame) {
@@ -55,7 +51,7 @@ function App() {
     if(status.description === "GAME_OVER"){
       return <div></div>;
     }else{
-      return <AllPlayerStatusPanel url={getUrl()+"/summary"} gamecode={gameCode} username={username}/>
+      return <AllPlayerStatusPanel baseUrl={getUrl()} gamecode={gameCode} username={username}/>
     }
   }
 
@@ -94,7 +90,7 @@ function App() {
         );
       case "GAME_OVER":
         return (
-              <Results url={getUrl() + "/results"} gameCode={gameCode}/>
+              <Results baseUrl={getUrl()} gameCode={gameCode}/>
         );
       case "WAIT":
         return (

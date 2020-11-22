@@ -3,11 +3,11 @@ import {useState} from "react";
 import {useInterval} from "../hooks/interval";
 import axios from 'axios';
 
-export default function AllPlayerStatusPanel({url, gamecode, username}) {
+export default function AllPlayerStatusPanel({baseUrl, gamecode, username}) {
     const [summary, setSummary] = useState({players:[], canJoin:undefined, phaseNumber:undefined});
 
     async function getSummary(url, gamecode){
-        const summaryResponse = await axios.get(url+'?game='+gamecode);
+        const summaryResponse = await axios.get(url+'/game/'+gamecode);
         setSummary(summaryResponse.data);
     }
 
@@ -41,7 +41,7 @@ export default function AllPlayerStatusPanel({url, gamecode, username}) {
         else return phaseNumber;
     }
 
-    useInterval(() => {getSummary(url, gamecode)}, 2000);
+    useInterval(() => {getSummary(baseUrl, gamecode)}, 2000);
 
     function getRoundNumberOrMessage(){
         if(summary['phaseNumber'] > summary['players'].length){
