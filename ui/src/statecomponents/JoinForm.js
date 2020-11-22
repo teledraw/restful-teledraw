@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios/index";
+import InstructionsPanel from "../helpercomponents/InstructionsPanel";
 
 export function JoinForm(props) {
   const [username, setUsername] = useState("");
@@ -27,7 +28,7 @@ export function JoinForm(props) {
         <label htmlFor="gamecode-input">Room Code:</label>
         <input type="text" id="gamecode-input" onChange={handleGameChange}></input>
         <button onClick={handleSubmit}>JOIN</button>
-        <div>(Note: You can rejoin a completed game you were a part of to review the results)</div>
+        <InstructionsPanel/>
       </form>
     </div>
   );

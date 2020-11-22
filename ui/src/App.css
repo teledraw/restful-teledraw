@@ -20,6 +20,11 @@
   margin-top:2%;
 }
 
+.instructions-panel{
+  margin-top:2%;
+  text-align: center;
+}
+
 .link-styling{
   cursor:pointer;
   color:blue;

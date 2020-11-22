@@ -327,6 +327,15 @@ describe('the example frontend', () => {
 
         });
 
+        test("join form includes link to repo/instructions", () => {
+            const {getByText, getByLabelText} = render(<App/>);
+            getByText(/Join a Game/);
+            const instructionsLink = getByText(/How to Play/);
+            expect(instructionsLink.href).toEqual("https://github.com/teledraw/restful-teledraw/blob/master/README.md#whats-teledraw");
+            expect(instructionsLink.target).toEqual("_blank");
+
+        });
+
         test("shows the submit phrase form and warning when the API is in SUBMIT_INITIAL_PHRASE state and no one has submitted", async (done) => {
             mockGets({description: "SUBMIT_INITIAL_PHRASE"},[], [], true);
 
