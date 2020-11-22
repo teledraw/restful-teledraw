@@ -11,6 +11,21 @@
   text-align:left;
 }
 
+.drawing-tool-panel{
+  margin-top:10%;
+  text-align: center;
+}
+
+.drawing-tool-suggestion {
+  margin-top:2%;
+}
+
+.link-styling{
+  cursor:pointer;
+  color:blue;
+  text-decoration:underline;
+}
+
 .start-warning{
   color:red;
 }
