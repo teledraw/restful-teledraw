@@ -8,21 +8,13 @@ from app.Game import Game
 
 _gamesu = list()
 
+
 def get_game_by_code(game_code):
     return next((game for game in _gamesu if game.code == game_code), None)
 
 
 def game_exists(gamecode):
     return any(game.code == gamecode for game in _gamesu)
-
-def get_next_player(username, gamecode):
-    usernames = list(get_game_by_code(gamecode).userStatuses.keys())
-    return usernames[0] if usernames.index(username) == len(usernames) - 1 else usernames[usernames.index(username) + 1]
-
-
-def get_previous_player(username, gamecode):
-    usernames = list(get_game_by_code(gamecode).userStatuses.keys())
-    return usernames[len(usernames) - 1] if usernames.index(username) == 0 else usernames[usernames.index(username) - 1]
 
 
 def create_game(game_code):
@@ -46,18 +38,6 @@ def get_user_submission_thread(username, gamecode):
             get_game_by_code(gamecode).phrases[user][int(i / 2)] if i % 2 == 0 else get_game_by_code(gamecode).images[user][
                 int(i / 2)])
     return to_return
-
-
-def get_phrase_prompt(username, gamecode):
-    users = list(get_game_by_code(gamecode).userStatuses.keys())
-    username_of_phrase_source = get_previous_player(username, gamecode)
-    return get_game_by_code(gamecode).phrases[username_of_phrase_source][-1]
-
-
-def get_image_prompt(username, gamecode):
-    users = list(get_game_by_code(gamecode).userStatuses.keys())
-    username_of_image_source = get_previous_player(username, gamecode)
-    return get_game_by_code(gamecode).images[username_of_image_source][-1]
 
 
 def create_app():
@@ -89,10 +69,12 @@ def create_app():
     def statusRequiresGameCode(username):
         return err('Cannot get player status for ' + username + ': missing game code.')
 
+
     @app.route('/game/<path:gamecode>/player', methods=['GET'])
     @cross_origin()
     def statusRequiresUsername(gamecode):
         return err('Cannot get player status: missing username.')
+
 
     @app.route('/game/<path:gamecode>/player/<path:username>', methods=['GET'])
     @cross_origin()
@@ -105,17 +87,18 @@ def create_app():
             return err('Unexplained error getting status')
 
     def get_user_status(username, gamecode, just_the_status=False):
-        status_for_user = get_game_by_code(gamecode).userStatuses[username]
+        game = get_game_by_code(gamecode)
+        status_for_user = game.userStatuses[username]
         if (just_the_status):
             return {'description': status_for_user}
         elif (status_for_user == 'SUBMIT_IMAGE' or status_for_user == 'SUBMIT_PHRASE'):
             return {'description': status_for_user,
-                    'prompt': get_phrase_prompt(username,
-                                                gamecode) if status_for_user == 'SUBMIT_IMAGE' else get_image_prompt(
-                        username, gamecode), 'previousPlayerUsername': get_previous_player(username, gamecode),
-                    'nextPlayerUsername': get_next_player(username, gamecode)}
-        return {'description': status_for_user, 'previousPlayerUsername': get_previous_player(username, gamecode),
-                'nextPlayerUsername': get_next_player(username, gamecode)}
+                    'prompt': game.get_phrase_prompt(username
+                                                ) if status_for_user == 'SUBMIT_IMAGE' else game.get_image_prompt(
+                        username), 'previousPlayerUsername': game.get_previous_player(username),
+                    'nextPlayerUsername': game.get_next_player(username)}
+        return {'description': status_for_user, 'previousPlayerUsername': game.get_previous_player(username),
+                'nextPlayerUsername': game.get_next_player(username)}
 
     @app.route('/phrase', methods=['POST'])
     @cross_origin()

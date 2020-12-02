@@ -61,3 +61,21 @@ class Game:
 
     def join(self, username):
         self.set_user_status(username, 'SUBMIT_INITIAL_PHRASE')
+
+    def get_phrase_prompt(self, username):
+        username_of_phrase_source = self.get_previous_player(username)
+        return self.phrases[username_of_phrase_source][-1]
+
+    def get_image_prompt(self, username):
+        username_of_image_source = self.get_previous_player(username)
+        return self.images[username_of_image_source][-1]
+
+    def get_next_player(self, username):
+        usernames = list(self.userStatuses.keys())
+        return usernames[0] if usernames.index(username) == len(usernames) - 1 else usernames[
+            usernames.index(username) + 1]
+
+    def get_previous_player(self, username):
+        usernames = list(self.userStatuses.keys())
+        return usernames[len(usernames) - 1] if usernames.index(username) == 0 else usernames[
+            usernames.index(username) - 1]
