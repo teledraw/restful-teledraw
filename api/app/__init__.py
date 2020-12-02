@@ -8,7 +8,6 @@ from app.Game import Game
 
 _games = list()
 
-
 def get_game_by_code(game_code):
     return next((game for game in _games if game.code == game_code), None)
 
@@ -63,8 +62,8 @@ def create_app():
         if not game_exists(gamecode):
             return err('No such game: "' + gamecode + '".')
         else:
-            game=get_game_by_code(gamecode)
-            if username in game.userStatuses.keys():
+            game = get_game_by_code(gamecode)
+            if game.has_player(username):
                 return jsonify(game.get_user_status(username)), 200
             else:
                 return err('Unexplained error getting status')
@@ -80,11 +79,10 @@ def create_app():
             return err('No such game: "' + gamecode + '".')
         else:
             game = get_game_by_code(gamecode)
-            if game.userStatuses[username] not in ["SUBMIT_INITIAL_PHRASE",
-                                                                 "SUBMIT_PHRASE"]:
+            if not game.is_action_allowed(username, "submitphrase"):
                 return err('Cannot submit phrase: it is not ' + request.json[
                     'username'] + '\'s turn to submit a phrase.')
-            elif username in game.userStatuses.keys():
+            elif game.has_player(username):
                 game.save_phrase(username, request.json['phrase'])
                 return '', 200
             return err('Unexplained error submitting phrase')
@@ -99,9 +97,9 @@ def create_app():
             return err('No such game: "' + gamecode + '".')
         else:
             game = get_game_by_code(gamecode)
-            if game.userStatuses[username] != "SUBMIT_IMAGE":
+            if not game.is_action_allowed(username, "submitimage"):
                 return err('Cannot submit image: it is not ' + username + '\'s turn to submit an image.')
-            elif username in game.userStatuses.keys():
+            elif game.has_player(username):
                 game.save_image(username, request.json['image'])
                 return '', 200
             return err('Unexplained error submitting image')
@@ -123,7 +121,7 @@ def create_app():
             status_summary['canJoin'] = not game.too_late_to_join()
             status_summary['phaseNumber'] = game.get_phase_number()
             status_summary['players'] = []
-            for user in game.userStatuses.keys():
+            for user in game.get_players():
                 user_status = dict()
                 user_status['username'] = user
                 user_status['status'] = game.get_user_status(user, just_the_status=True)
