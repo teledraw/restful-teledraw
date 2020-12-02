@@ -81,24 +81,13 @@ def create_app():
     def get_status_for_player(gamecode, username):
         if not game_exists(gamecode):
             return err('No such game: "' + gamecode + '".')
-        elif username in get_game_by_code(gamecode).userStatuses.keys():
-            return jsonify(get_user_status(username, gamecode)), 200
         else:
-            return err('Unexplained error getting status')
+            game=get_game_by_code(gamecode)
+            if username in game.userStatuses.keys():
+                return jsonify(game.get_user_status(username)), 200
+            else:
+                return err('Unexplained error getting status')
 
-    def get_user_status(username, gamecode, just_the_status=False):
-        game = get_game_by_code(gamecode)
-        status_for_user = game.userStatuses[username]
-        if (just_the_status):
-            return {'description': status_for_user}
-        elif (status_for_user == 'SUBMIT_IMAGE' or status_for_user == 'SUBMIT_PHRASE'):
-            return {'description': status_for_user,
-                    'prompt': game.get_phrase_prompt(username
-                                                ) if status_for_user == 'SUBMIT_IMAGE' else game.get_image_prompt(
-                        username), 'previousPlayerUsername': game.get_previous_player(username),
-                    'nextPlayerUsername': game.get_next_player(username)}
-        return {'description': status_for_user, 'previousPlayerUsername': game.get_previous_player(username),
-                'nextPlayerUsername': game.get_next_player(username)}
 
     @app.route('/phrase', methods=['POST'])
     @cross_origin()
@@ -148,14 +137,15 @@ def create_app():
         if not game_exists(gamecode):
             return err('No such game: "' + gamecode + '".')
         else:
+            game = get_game_by_code(gamecode)
             status_summary = dict()
-            status_summary['canJoin'] = not get_game_by_code(gamecode).too_late_to_join()
-            status_summary['phaseNumber'] = get_game_by_code(gamecode).get_phase_number()
+            status_summary['canJoin'] = not game.too_late_to_join()
+            status_summary['phaseNumber'] = game.get_phase_number()
             status_summary['players'] = []
-            for user in get_game_by_code(gamecode).userStatuses.keys():
+            for user in game.userStatuses.keys():
                 user_status = dict()
                 user_status['username'] = user
-                user_status['status'] = get_user_status(user, gamecode, just_the_status=True)
+                user_status['status'] = game.get_user_status(user, just_the_status=True)
                 status_summary['players'].append(user_status)
             return jsonify(status_summary), 200
 

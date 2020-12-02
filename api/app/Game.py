@@ -15,7 +15,7 @@ class Game:
         for user in self.userStatuses.keys():
             if user not in self.phrases.keys() or user not in self.images.keys() or len(
                     self.phrases[user]) + len(
-                    self.images[user]) != number_of_users:
+                self.images[user]) != number_of_users:
                 return False
         return number_of_users > 0
 
@@ -79,3 +79,16 @@ class Game:
         usernames = list(self.userStatuses.keys())
         return usernames[len(usernames) - 1] if usernames.index(username) == 0 else usernames[
             usernames.index(username) - 1]
+
+    def get_user_status(self, username, just_the_status=False):
+        status_for_user = self.userStatuses[username]
+        if just_the_status:
+            return {'description': status_for_user}
+        elif status_for_user == 'SUBMIT_IMAGE' or status_for_user == 'SUBMIT_PHRASE':
+            return {'description': status_for_user,
+                    'prompt': self.get_phrase_prompt(
+                        username) if status_for_user == 'SUBMIT_IMAGE' else self.get_image_prompt(username),
+                    'previousPlayerUsername': self.get_previous_player(username),
+                    'nextPlayerUsername': self.get_next_player(username)}
+        return {'description': status_for_user, 'previousPlayerUsername': self.get_previous_player(username),
+                'nextPlayerUsername': self.get_next_player(username)}
