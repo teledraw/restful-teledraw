@@ -6,38 +6,19 @@ from flask_cors import CORS, cross_origin
 
 from app.Game import Game
 
-_gamesu = list()
+_games = list()
 
 
 def get_game_by_code(game_code):
-    return next((game for game in _gamesu if game.code == game_code), None)
+    return next((game for game in _games if game.code == game_code), None)
 
 
 def game_exists(gamecode):
-    return any(game.code == gamecode for game in _gamesu)
+    return any(game.code == gamecode for game in _games)
 
 
 def create_game(game_code):
-    _gamesu.append(Game(game_code))
-
-
-def get_all_submission_threads_by_user(gamecode):
-    to_return = list()
-    for username in get_game_by_code(gamecode).userStatuses.keys():
-        to_return.append({"originator": username, "submissions": get_user_submission_thread(username, gamecode)})
-    return to_return
-
-
-def get_user_submission_thread(username, gamecode):
-    users = list(get_game_by_code(gamecode).userStatuses.keys())
-    index_of_original_user = users.index(username)
-    to_return = [get_game_by_code(gamecode).phrases[username][0]]
-    for i in range(1, len(users)):
-        user = users[(index_of_original_user + i) % len(users)]
-        to_return.append(
-            get_game_by_code(gamecode).phrases[user][int(i / 2)] if i % 2 == 0 else get_game_by_code(gamecode).images[user][
-                int(i / 2)])
-    return to_return
+    _games.append(Game(game_code))
 
 
 def create_app():
@@ -160,15 +141,17 @@ def create_app():
         gamecode = game
         if not game_exists(gamecode):
             return err('Cannot get results.  No such game: "' + gamecode + '".')
-        elif get_game_by_code(gamecode).is_over():
-            return jsonify(get_all_submission_threads_by_user(gamecode)), 200
         else:
-            return err('Cannot get results: game not over.')
+            game = get_game_by_code(gamecode)
+            if get_game_by_code(gamecode).is_over():
+                return jsonify(game.get_all_submission_threads_indexed_by_user()), 200
+            else:
+                return err('Cannot get results: game not over.')
 
     @app.route('/restart', methods=['POST'])
     @cross_origin()
-    def restart_game():
-        _gamesu.clear()
+    def clear_all():
+        _games.clear()
         return '', 200
 
     def require_request_data(_request, for_task, variables=['username', 'game'], in_body=False):

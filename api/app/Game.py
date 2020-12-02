@@ -92,3 +92,21 @@ class Game:
                     'nextPlayerUsername': self.get_next_player(username)}
         return {'description': status_for_user, 'previousPlayerUsername': self.get_previous_player(username),
                 'nextPlayerUsername': self.get_next_player(username)}
+
+    def get_all_submission_threads_indexed_by_user(self):
+        to_return = list()
+        for username in self.userStatuses.keys():
+            to_return.append({"originator": username, "submissions": self.get_user_submission_thread(username)})
+        return to_return
+
+    def get_user_submission_thread(self, username):
+        users = list(self.userStatuses.keys())
+        index_of_original_user = users.index(username)
+        to_return = [self.phrases[username][0]]
+        for i in range(1, len(users)):
+            user = users[(index_of_original_user + i) % len(users)]
+            to_return.append(
+                self.phrases[user][int(i / 2)] if i % 2 == 0 else
+                self.images[user][
+                    int(i / 2)])
+        return to_return
