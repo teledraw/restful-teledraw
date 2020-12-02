@@ -1,18 +1,19 @@
 from app.ImageSubmission import ImageSubmission
+from app.PhraseSubmission import PhraseSubmission
 from app.Player import Player
 
 
 class Game:
     _players = list()
     _image_submissions = list()
-    _phrases = dict()
+    _phrase_submissions = list()
     code = ""
 
     def __init__(self, game_code):
         self.code = game_code
         self._players = list()
-        self._phrases = dict()
         self._image_submissions = list()
+        self._phrase_submissions = list()
 
     def get_players(self):
         return self._players
@@ -25,8 +26,7 @@ class Game:
         if number_of_users < 1:
             return False
         else:
-            number_of_phrases = sum(len(phrases) for phrases in self._phrases.values())
-            return number_of_phrases + len(self._image_submissions) == number_of_users ** 2
+            return len(self._phrase_submissions) + len(self._image_submissions) == number_of_users ** 2
 
     def is_action_allowed(self, username, action):
         if action == "submitphrase":
@@ -55,20 +55,17 @@ class Game:
 
     def get_phase_number(self):
         current_number_of_players = len(self.get_players())
-        if len(self._phrases) < current_number_of_players:
+        if len(self._phrase_submissions) < current_number_of_players:
             return 1
         elif len(self._image_submissions) < current_number_of_players:
             return 2
         else:
-            completed_phrase_rounds = len(self._phrases[min(self._phrases, key=len)])
+            completed_phrase_rounds = len(self._phrase_submissions) / len(self.get_players())
             completed_image_rounds = len(self._image_submissions) / len(self.get_players())
             return 1 + completed_image_rounds + completed_phrase_rounds
 
     def save_phrase(self, username, new_phrase):
-        if username not in self._phrases.keys():
-            self._phrases[username] = [new_phrase]
-        else:
-            self._phrases[username].append(new_phrase)
+        self._phrase_submissions.append(PhraseSubmission(self.get_player(username), new_phrase))
         self.set_user_status(username, "WAIT")
 
     def save_image(self, username, new_image):
@@ -82,14 +79,14 @@ class Game:
 
     def get_phrase_prompt(self, username):
         username_of_phrase_source = self.get_previous_player(username)
-        return self._phrases[username_of_phrase_source][-1]
+        return self.get_all_submissions_by_player(self.get_player(username_of_phrase_source), type='phrase')[-1].get_phrase()
 
     def get_image_prompt(self, username):
         username_of_image_source = self.get_previous_player(username)
-        return self.get_all_image_submissions_by_player(self.get_player(username_of_image_source))[-1].get_image()
+        return self.get_all_submissions_by_player(self.get_player(username_of_image_source))[-1].get_image()
 
-    def get_all_image_submissions_by_player(self, player):
-        return list(filter(lambda x: x.get_player() == player, self._image_submissions))
+    def get_all_submissions_by_player(self, player, type='image'):
+        return list(filter(lambda x: x.get_player() == player, self._image_submissions if type == 'image' else self._phrase_submissions))
 
     def get_playernames(self):
         return list(player.get_name() for player in self.get_players())
@@ -126,11 +123,11 @@ class Game:
     def get_user_submission_thread(self, username):
         users = self.get_playernames()
         index_of_original_user = users.index(username)
-        to_return = [self._phrases[username][0]]
+        to_return = [self.get_all_submissions_by_player(self.get_player(username), type='phrase')[0].get_phrase()]
         for i in range(1, len(users)):
             user = users[(index_of_original_user + i) % len(users)]
             to_return.append(
-                self._phrases[user][int(i / 2)] if i % 2 == 0 else
-                self.get_all_image_submissions_by_player(self.get_player(user))[
+                self.get_all_submissions_by_player(self.get_player(user), type='phrase')[int(i / 2)].get_phrase() if i % 2 == 0 else
+                self.get_all_submissions_by_player(self.get_player(user))[
                     int(i / 2)].get_image())
         return to_return
