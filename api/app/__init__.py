@@ -121,7 +121,7 @@ def create_app():
             status_summary['canJoin'] = not game.too_late_to_join()
             status_summary['phaseNumber'] = game.get_phase_number()
             status_summary['players'] = []
-            for user in game.get_players():
+            for user in game.get_playernames():
                 user_status = dict()
                 user_status['username'] = user
                 user_status['status'] = game.get_user_status(user, just_the_status=True)
@@ -141,7 +141,7 @@ def create_app():
             return err('Cannot get results.  No such game: "' + gamecode + '".')
         else:
             game = get_game_by_code(gamecode)
-            if get_game_by_code(gamecode).is_over():
+            if game.is_over():
                 return jsonify(game.get_all_submission_threads_indexed_by_user()), 200
             else:
                 return err('Cannot get results: game not over.')
