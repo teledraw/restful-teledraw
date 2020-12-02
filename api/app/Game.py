@@ -11,3 +11,12 @@ class Game:
         self.phrases = dict()
         self.images = dict()
 
+    def is_over(self):
+        number_of_users = len(self.userStatuses.keys())
+        for user in self.userStatuses.keys():
+            if user not in self.phrases.keys() or user not in self.images.keys() or len(
+                    self.phrases[user]) + len(
+                    self.images[user]) != number_of_users:
+                return False
+        return number_of_users > 0
+

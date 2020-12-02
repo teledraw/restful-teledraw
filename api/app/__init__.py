@@ -12,16 +12,6 @@ def get_game_by_code(game_code):
     return next((game for game in _gamesu if game.code == game_code), None)
 
 
-def game_over(game):
-    number_of_users = len(get_game_by_code(game).userStatuses.keys())
-    for user in get_game_by_code(game).userStatuses.keys():
-        if user not in get_game_by_code(game).phrases.keys() or user not in get_game_by_code(game).images.keys() or len(
-                get_game_by_code(game).phrases[user]) + len(
-                get_game_by_code(game).images[user]) != number_of_users:
-            return False
-    return number_of_users > 0
-
-
 def game_exists(gamecode):
     return any(game.code == gamecode for game in _gamesu)
 
@@ -48,7 +38,7 @@ def create_game(game_code):
 def update_status_if_all_players_done(gamecode):
     if all(status == 'WAIT' for status in get_game_by_code(gamecode).userStatuses.values()):
         next_status = 'SUBMIT_PHRASE' if get_phase_number(gamecode) % 2 == 1 else 'SUBMIT_IMAGE'
-        if game_over(gamecode):
+        if get_game_by_code(gamecode).is_over():
             next_status = 'GAME_OVER'
         for user in get_game_by_code(gamecode).userStatuses.keys():
             set_user_status(user, gamecode, next_status)
@@ -241,7 +231,7 @@ def create_app():
         gamecode = game
         if not game_exists(gamecode):
             return err('Cannot get results.  No such game: "' + gamecode + '".')
-        elif game_over(gamecode):
+        elif get_game_by_code(gamecode).is_over():
             return jsonify(get_all_submission_threads_by_user(gamecode)), 200
         else:
             return err('Cannot get results: game not over.')
