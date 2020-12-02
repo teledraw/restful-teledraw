@@ -1,5 +1,4 @@
 class Game:
-
     userStatuses = dict()
     images = dict()
     phrases = dict()
@@ -45,3 +44,17 @@ class Game:
             completed_phrase_rounds = len(self.phrases[min(self.phrases, key=len)])
             completed_image_rounds = len(self.images[min(self.images, key=len)])
             return 1 + completed_image_rounds + completed_phrase_rounds
+
+    def save_phrase(self, username, new_phrase):
+        if username not in self.phrases.keys():
+            self.phrases[username] = [new_phrase]
+        else:
+            self.phrases[username].append(new_phrase)
+        self.set_user_status(username, "WAIT")
+
+    def save_image(self, username, new_image):
+        if username not in self.images.keys():
+            self.images[username] = [new_image]
+        else:
+            self.images[username].append(new_image)
+        self.set_user_status(username, "WAIT")

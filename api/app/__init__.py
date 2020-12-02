@@ -48,24 +48,10 @@ def get_user_submission_thread(username, gamecode):
     return to_return
 
 
-def save_phrase(username, gamecode, new_phrase):
-    if (username not in get_game_by_code(gamecode).phrases.keys()):
-        get_game_by_code(gamecode).phrases[username] = [new_phrase]
-    else:
-        get_game_by_code(gamecode).phrases[username].append(new_phrase)
-
-
 def get_phrase_prompt(username, gamecode):
     users = list(get_game_by_code(gamecode).userStatuses.keys())
     username_of_phrase_source = get_previous_player(username, gamecode)
     return get_game_by_code(gamecode).phrases[username_of_phrase_source][-1]
-
-
-def save_image(username, gamecode, new_image):
-    if (username not in get_game_by_code(gamecode).images.keys()):
-        get_game_by_code(gamecode).images[username] = [new_image]
-    else:
-        get_game_by_code(gamecode).images[username].append(new_image)
 
 
 def get_image_prompt(username, gamecode):
@@ -139,15 +125,16 @@ def create_app():
             return gamecode
         elif not game_exists(gamecode):
             return err('No such game: "' + gamecode + '".')
-        elif get_game_by_code(gamecode).userStatuses[username] not in ["SUBMIT_INITIAL_PHRASE",
+        else:
+            game = get_game_by_code(gamecode)
+            if game.userStatuses[username] not in ["SUBMIT_INITIAL_PHRASE",
                                                                  "SUBMIT_PHRASE"]:
-            return err('Cannot submit phrase: it is not ' + request.json[
-                'username'] + '\'s turn to submit a phrase.')
-        if username in get_game_by_code(gamecode).userStatuses.keys():
-            save_phrase(username, gamecode, request.json['phrase'])
-            get_game_by_code(gamecode).set_user_status(username, "WAIT")
-            return '', 200
-        return err('Unexplained error submitting phrase')
+                return err('Cannot submit phrase: it is not ' + request.json[
+                    'username'] + '\'s turn to submit a phrase.')
+            elif username in game.userStatuses.keys():
+                game.save_phrase(username, request.json['phrase'])
+                return '', 200
+            return err('Unexplained error submitting phrase')
 
     @app.route('/image', methods=['POST'])
     @cross_origin()
@@ -157,13 +144,14 @@ def create_app():
             return gamecode
         if not game_exists(gamecode):
             return err('No such game: "' + gamecode + '".')
-        elif get_game_by_code(gamecode).userStatuses[username] != "SUBMIT_IMAGE":
-            return err('Cannot submit image: it is not ' + username + '\'s turn to submit an image.')
-        elif username in get_game_by_code(gamecode).userStatuses.keys():
-            save_image(username, gamecode, request.json['image'])
-            get_game_by_code(gamecode).set_user_status(username, 'WAIT')
-            return '', 200
-        return err('Unexplained error submitting image')
+        else:
+            game = get_game_by_code(gamecode)
+            if game.userStatuses[username] != "SUBMIT_IMAGE":
+                return err('Cannot submit image: it is not ' + username + '\'s turn to submit an image.')
+            elif username in game.userStatuses.keys():
+                game.save_image(username, request.json['image'])
+                return '', 200
+            return err('Unexplained error submitting image')
 
     @app.route('/game', methods=['GET'])
     @cross_origin()
