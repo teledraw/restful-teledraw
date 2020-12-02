@@ -58,3 +58,6 @@ class Game:
         else:
             self.images[username].append(new_image)
         self.set_user_status(username, "WAIT")
+
+    def join(self, username):
+        self.set_user_status(username, 'SUBMIT_INITIAL_PHRASE')

@@ -81,7 +81,7 @@ def create_app():
         else:
             if not game_exists(gamecode):
                 create_game(gamecode)
-            get_game_by_code(gamecode).userStatuses[username] = 'SUBMIT_INITIAL_PHRASE'
+            get_game_by_code(gamecode).join(username)
             return '', 200
 
     @app.route('/game/player/<path:username>', methods=['GET'])
