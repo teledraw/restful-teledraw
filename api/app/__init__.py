@@ -15,12 +15,6 @@ def get_game_by_code(game_code):
 def game_exists(gamecode):
     return any(game.code == gamecode for game in _gamesu)
 
-
-def too_late_to_join(game):
-    return game_exists(game) and not all(
-        status == "SUBMIT_INITIAL_PHRASE" for status in list(get_game_by_code(game).userStatuses.values()))
-
-
 def get_next_player(username, gamecode):
     usernames = list(get_game_by_code(gamecode).userStatuses.keys())
     return usernames[0] if usernames.index(username) == len(usernames) - 1 else usernames[usernames.index(username) + 1]
@@ -122,7 +116,7 @@ def create_app():
         (username, gamecode) = require_request_data(request, 'join game', in_body=True)
         if not username:
             return gamecode
-        elif too_late_to_join(gamecode):
+        elif game_exists(gamecode) and get_game_by_code(gamecode).too_late_to_join():
             return err("Cannot join a game in progress.")
         else:
             if not game_exists(gamecode):
@@ -210,7 +204,7 @@ def create_app():
             return err('No such game: "' + gamecode + '".')
         else:
             status_summary = dict()
-            status_summary['canJoin'] = not too_late_to_join(gamecode)
+            status_summary['canJoin'] = not get_game_by_code(game).too_late_to_join()
             status_summary['phaseNumber'] = get_phase_number(gamecode)
             status_summary['players'] = []
             for user in get_game_by_code(gamecode).userStatuses.keys():

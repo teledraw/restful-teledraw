@@ -20,3 +20,5 @@ class Game:
                 return False
         return number_of_users > 0
 
+    def too_late_to_join(self):
+        return not all(status == "SUBMIT_INITIAL_PHRASE" for status in list(self.userStatuses.values()))
