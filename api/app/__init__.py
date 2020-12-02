@@ -29,20 +29,6 @@ def create_game(game_code):
     _gamesu.append(Game(game_code))
 
 
-def update_status_if_all_players_done(gamecode):
-    if all(status == 'WAIT' for status in get_game_by_code(gamecode).userStatuses.values()):
-        next_status = 'SUBMIT_PHRASE' if get_phase_number(gamecode) % 2 == 1 else 'SUBMIT_IMAGE'
-        if get_game_by_code(gamecode).is_over():
-            next_status = 'GAME_OVER'
-        for user in get_game_by_code(gamecode).userStatuses.keys():
-            set_user_status(user, gamecode, next_status)
-
-
-def set_user_status(username, gamecode, new_status):
-    get_game_by_code(gamecode).userStatuses[username] = new_status
-    update_status_if_all_players_done(gamecode)
-
-
 def get_all_submission_threads_by_user(gamecode):
     to_return = list()
     for username in get_game_by_code(gamecode).userStatuses.keys():
@@ -86,18 +72,6 @@ def get_image_prompt(username, gamecode):
     users = list(get_game_by_code(gamecode).userStatuses.keys())
     username_of_image_source = get_previous_player(username, gamecode)
     return get_game_by_code(gamecode).images[username_of_image_source][-1]
-
-
-def get_phase_number(gamecode):
-    current_number_of_players = len(get_game_by_code(gamecode).userStatuses)
-    if len(get_game_by_code(gamecode).phrases) < current_number_of_players:
-        return 1
-    elif len(get_game_by_code(gamecode).images) < current_number_of_players:
-        return 2
-    else:
-        completed_phrase_rounds = len(get_game_by_code(gamecode).phrases[min(get_game_by_code(gamecode).phrases, key=len)])
-        completed_image_rounds = len(get_game_by_code(gamecode).images[min(get_game_by_code(gamecode).images, key=len)])
-        return 1 + completed_image_rounds + completed_phrase_rounds
 
 
 def create_app():
@@ -171,7 +145,7 @@ def create_app():
                 'username'] + '\'s turn to submit a phrase.')
         if username in get_game_by_code(gamecode).userStatuses.keys():
             save_phrase(username, gamecode, request.json['phrase'])
-            set_user_status(username, gamecode, "WAIT")
+            get_game_by_code(gamecode).set_user_status(username, "WAIT")
             return '', 200
         return err('Unexplained error submitting phrase')
 
@@ -187,7 +161,7 @@ def create_app():
             return err('Cannot submit image: it is not ' + username + '\'s turn to submit an image.')
         elif username in get_game_by_code(gamecode).userStatuses.keys():
             save_image(username, gamecode, request.json['image'])
-            set_user_status(username, gamecode, 'WAIT')
+            get_game_by_code(gamecode).set_user_status(username, 'WAIT')
             return '', 200
         return err('Unexplained error submitting image')
 
@@ -204,8 +178,8 @@ def create_app():
             return err('No such game: "' + gamecode + '".')
         else:
             status_summary = dict()
-            status_summary['canJoin'] = not get_game_by_code(game).too_late_to_join()
-            status_summary['phaseNumber'] = get_phase_number(gamecode)
+            status_summary['canJoin'] = not get_game_by_code(gamecode).too_late_to_join()
+            status_summary['phaseNumber'] = get_game_by_code(gamecode).get_phase_number()
             status_summary['players'] = []
             for user in get_game_by_code(gamecode).userStatuses.keys():
                 user_status = dict()
