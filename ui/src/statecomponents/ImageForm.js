@@ -24,7 +24,7 @@ export default function ImageForm(props) {
       <form>
         <div>Your Drawing (that will go to {props.nextUsername}):</div>
         <label htmlFor={"image-input"}><div className={"image-input-facade"}>{image ? image.name : "Choose a file..."}</div></label>
-        <input type="file" accept="image/png" id="image-input" onChange={handleChange} hidden/>
+        <input type="file" accept="image/*" id="image-input" onChange={handleChange} hidden/>
         <button onClick={handleSubmit}>SUBMIT</button>
       </form>
       <DrawingToolSuggestionPanel toolUrls={drawingToolUrls}/>
