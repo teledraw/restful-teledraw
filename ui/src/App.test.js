@@ -461,9 +461,9 @@ describe('the example frontend', () => {
                 type: 'image/png',
             });
 
-            let {getByLabelText, getByText} = joinGame();
-            await wait(() => {
-                const imageInput = getByLabelText(/Your Drawing/);
+            let {queryByLabelText, getByText} = joinGame();
+            await wait(async () => {
+                const imageInput = queryByLabelText(/Choose a file/) == null ? queryByLabelText(/teledraw.png/) : queryByLabelText(/Choose a file/);
                 act(() => {
                     Object.defineProperty(imageInput, 'files', {
                         value: [imageFile],
@@ -471,7 +471,7 @@ describe('the example frontend', () => {
                     });
                     fireEvent.change(imageInput);
                 });
-                const submitButton = getByText("UPLOAD");
+                const submitButton = getByText("SUBMIT");
                 act(() => {
                     fireEvent.click(submitButton);
                 });

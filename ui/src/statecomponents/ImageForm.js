@@ -4,7 +4,7 @@ import DrawingToolSuggestionPanel from "../helpercomponents/DrawingToolSuggestio
 export default function ImageForm(props) {
   const drawingToolUrls = ["https://jspaint.app","https://www.piskelapp.com", "https://pixlr.com/", "https://www.getpaint.net/"];
 
-  const [image, setImage] = useState();
+  const [image, setImage] = useState(undefined);
 
   function handleSubmit(event) {
     let fileData = new FileReader();
@@ -22,9 +22,10 @@ export default function ImageForm(props) {
       <h1>Submit an Image</h1>
   <h2>Draw this phrase (from {props.previousUsername}): "{props.phrase}"</h2>
       <form>
-        <label htmlFor="image-input">Your Drawing (that will go to {props.nextUsername}):</label>
-        <input type="file" accept="image/png" id="image-input" onChange={handleChange}/>
-        <button onClick={handleSubmit}>UPLOAD</button>
+        <div>Your Drawing (that will go to {props.nextUsername}):</div>
+        <label htmlFor={"image-input"}><div className={"image-input-facade"}>{image ? image.name : "Choose a file..."}</div></label>
+        <input type="file" accept="image/png" id="image-input" onChange={handleChange} hidden/>
+        <button onClick={handleSubmit}>SUBMIT</button>
       </form>
       <DrawingToolSuggestionPanel toolUrls={drawingToolUrls}/>
     </div>

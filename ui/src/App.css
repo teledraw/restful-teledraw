@@ -25,6 +25,13 @@
   text-align: center;
 }
 
+.image-input-facade{
+  border: 3px solid grey;
+  border-radius: 6px;
+  padding: 2% 0;
+  margin: 2% 0;
+}
+
 .link-styling{
   cursor:pointer;
   color:blue;
