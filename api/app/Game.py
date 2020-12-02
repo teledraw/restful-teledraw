@@ -1,10 +1,10 @@
+from app.ImageSubmission import ImageSubmission
 from app.Player import Player
 
 
 class Game:
-    #_userStatuses = dict()
     _players = list()
-    _images = dict()
+    _image_submissions = list()
     _phrases = dict()
     code = ""
 
@@ -12,7 +12,7 @@ class Game:
         self.code = game_code
         self._players = list()
         self._phrases = dict()
-        self._images = dict()
+        self._image_submissions = list()
 
     def get_players(self):
         return self._players
@@ -22,12 +22,11 @@ class Game:
 
     def is_over(self):
         number_of_users = len(self.get_players())
-        for user in self.get_playernames():
-            if user not in self._phrases.keys() or user not in self._images.keys() or len(
-                    self._phrases[user]) + len(
-                    self._images[user]) != number_of_users:
-                return False
-        return number_of_users > 0
+        if number_of_users < 1:
+            return False
+        else:
+            number_of_phrases = sum(len(phrases) for phrases in self._phrases.values())
+            return number_of_phrases + len(self._image_submissions) == number_of_users ** 2
 
     def is_action_allowed(self, username, action):
         if action == "submitphrase":
@@ -58,11 +57,11 @@ class Game:
         current_number_of_players = len(self.get_players())
         if len(self._phrases) < current_number_of_players:
             return 1
-        elif len(self._images) < current_number_of_players:
+        elif len(self._image_submissions) < current_number_of_players:
             return 2
         else:
             completed_phrase_rounds = len(self._phrases[min(self._phrases, key=len)])
-            completed_image_rounds = len(self._images[min(self._images, key=len)])
+            completed_image_rounds = len(self._image_submissions) / len(self.get_players())
             return 1 + completed_image_rounds + completed_phrase_rounds
 
     def save_phrase(self, username, new_phrase):
@@ -73,14 +72,11 @@ class Game:
         self.set_user_status(username, "WAIT")
 
     def save_image(self, username, new_image):
-        if username not in self._images.keys():
-            self._images[username] = [new_image]
-        else:
-            self._images[username].append(new_image)
+        self._image_submissions.append(ImageSubmission(self.get_player(username), new_image))
         self.set_user_status(username, "WAIT")
 
     def join(self, username):
-        if(not self.has_player(username)):
+        if not self.has_player(username):
             self._players.append(Player(username))
             self.set_user_status(username, 'SUBMIT_INITIAL_PHRASE')
 
@@ -90,7 +86,10 @@ class Game:
 
     def get_image_prompt(self, username):
         username_of_image_source = self.get_previous_player(username)
-        return self._images[username_of_image_source][-1]
+        return self.get_all_image_submissions_by_player(self.get_player(username_of_image_source))[-1].get_image()
+
+    def get_all_image_submissions_by_player(self, player):
+        return list(filter(lambda x: x.get_player() == player, self._image_submissions))
 
     def get_playernames(self):
         return list(player.get_name() for player in self.get_players())
@@ -132,6 +131,6 @@ class Game:
             user = users[(index_of_original_user + i) % len(users)]
             to_return.append(
                 self._phrases[user][int(i / 2)] if i % 2 == 0 else
-                self._images[user][
-                    int(i / 2)])
+                self.get_all_image_submissions_by_player(self.get_player(user))[
+                    int(i / 2)].get_image())
         return to_return
