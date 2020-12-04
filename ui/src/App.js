@@ -13,8 +13,10 @@ function App() {
   const [username, setUsername] = useState("");
   const [gameCode, setGameCode] = useState("");
   const [apiStatus, setApiStatus] = useState("");
+  const [apiSummary, setApiSummary] = useState(undefined);
 
   useInterval(pollApiStatusOnce, 2000);
+  useInterval(pollApiSummaryOnce, 2000);
 
   async function pollApiStatusOnce(){
     if(username === "") return;
@@ -22,12 +24,23 @@ function App() {
     setApiStatus(status.data);
   }
 
+  async function pollApiSummaryOnce(){
+    if(username === "") return;
+    const summary = await getApiSummaryForPlayer();
+    setApiSummary(summary.data);
+  }
+
+
   function getUrl(){
     return process.env.REACT_APP_API_URL;
   }
 
   function getApiStatusForPlayer(){
     return axios.get(getUrl() + `/game/${gameCode}/player/${username}`);
+  }
+
+  function getApiSummaryForPlayer(){
+    return axios.get(getUrl()+`/game/${gameCode}`)
   }
 
   function usernameJoined(joinedUsername, joinedGame) {
@@ -48,10 +61,10 @@ function App() {
   }
 
   function getStatusPanelByStatus(status){
-    if(status.description === "GAME_OVER"){
+    if(status.description === "GAME_OVER" || apiSummary === undefined){
       return <div></div>;
     }else{
-      return <AllPlayerStatusPanel baseUrl={getUrl()} gamecode={gameCode} username={username}/>
+      return <AllPlayerStatusPanel summary={apiSummary} username={username}/>
     }
   }
 
