@@ -1,6 +1,7 @@
 .idea/
 .DS_STORE
-
+ui/node_modules
+ui/.history
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
