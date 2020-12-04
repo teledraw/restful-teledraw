@@ -17,6 +17,18 @@ export default function PhraseForm(props) {
     return (props.image ? "Your phrase describing this image" : "Your common phrase, saying, or word") + " (that will go to " + props.nextUsername + "):";
   }
 
+  function renderSubmitButton() {
+    if(props.image){
+      return <button onClick={handleSubmit}>SUBMIT</button>;
+    }
+    else if(props.canStart) {
+      return <button onClick={handleSubmit}>START GAME</button>;
+    }
+    else{
+      return <button disabled>NOT ENOUGH PLAYERS TO START</button>;
+    }
+  }
+
   return (
     <div>
       <h1>Submit a Phrase</h1>
@@ -31,7 +43,7 @@ export default function PhraseForm(props) {
       <form>
         <label htmlFor="phrase-input">{getLabelText()}</label>
         <input type="text" id="phrase-input" onChange={handleChange}></input>
-        <button onClick={handleSubmit}>SUBMIT</button>
+        {renderSubmitButton()}
       </form>
     </div>
   );

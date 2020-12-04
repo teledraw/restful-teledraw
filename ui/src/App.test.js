@@ -3,23 +3,26 @@ import {act, fireEvent, render, wait} from "@testing-library/react";
 import App from "./App";
 import axios from "axios";
 import '@testing-library/jest-dom/extend-expect'
-import AllPlayersStatusPanel from "./helpercomponents/AllPlayersStatusPanel";
 import Results from "./statecomponents/Results";
 
 jest.mock("axios");
 
 describe('the example frontend', () => {
 
-    function mockGets(statusData = {}, summaryPlayers = [], resultsData = [], summaryIsJoinable=false, summaryPhaseNumber=1) {
+    function mockGets(statusData = {}, summaryPlayers = [], resultsData = [], summaryIsJoinable = false, summaryPhaseNumber = 1, summaryCanStart = true) {
         axios.get = jest.fn((url) => {
             if (url.match("\/game\/.*\/player\/.*")) {
                 return {data: statusData};
             } else if (url.includes("results")) {
                 return Promise.resolve({data: resultsData});
-            }
-            else if (url.match("\/game\/.*")) {
+            } else if (url.match("\/game\/.*")) {
                 return {
-                    data: {players:summaryPlayers, canJoin:summaryIsJoinable, phaseNumber:summaryPhaseNumber}
+                    data: {
+                        players: summaryPlayers,
+                        canJoin: summaryIsJoinable,
+                        phaseNumber: summaryPhaseNumber,
+                        canStart: summaryCanStart
+                    }
                 };
             }
         });
@@ -52,7 +55,7 @@ describe('the example frontend', () => {
         });
     });
     describe('the player status panel', () => {
-        test('shows "Waiting for Players" if joining is still possible and "???" for total rounds',  async (done) => {
+        test('shows "Waiting for Players" if joining is still possible and "???" for total rounds', async (done) => {
             mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [
                 {
                     username: "Billy",
@@ -72,7 +75,7 @@ describe('the example frontend', () => {
                 done();
             });
         });
-        test('shows "In Progress" if joining is not still possible',  async (done) => {
+        test('shows "In Progress" if joining is not still possible', async (done) => {
             mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [
                 {
                     username: "Billy",
@@ -314,7 +317,7 @@ describe('the example frontend', () => {
         });
 
         test("shows the submit phrase form and warning when the API is in SUBMIT_INITIAL_PHRASE state and no one has submitted", async (done) => {
-            mockGets({description: "SUBMIT_INITIAL_PHRASE"},[], [], true);
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [], [], true);
 
             axios.post = jest.fn();
             const {getByText} = joinGame();
@@ -406,16 +409,16 @@ describe('the example frontend', () => {
             });
         });
 
-        test("hits the phrase API endpoint when you submit the phrase form", async (done) => {
+        test("hits the phrase API endpoint when you submit the phrase form and summary says can start", async (done) => {
             axios.post = jest.fn();
-            mockGets({description: "SUBMIT_INITIAL_PHRASE"});
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [], [], false, 1, true);
             let {getByLabelText, getByText} = joinGame();
             await wait(() => {
                 const phraseInput = getByLabelText(/Your common phrase, saying, or word/);
                 act(() => {
                     fireEvent.change(phraseInput, {target: {value: "No ghouls allowed"}});
                 });
-                const submitButton = getByText("SUBMIT");
+                const submitButton = getByText("START GAME");
                 act(() => {
                     fireEvent.click(submitButton);
                 });
@@ -428,6 +431,24 @@ describe('the example frontend', () => {
                 });
                 done();
             });
+        });
+
+        test("doth not hit the phrase API endpoint when you submit the phrase form if summary says cannot start", async (done) => {
+            axios.post = jest.fn();
+            mockGets({description: "SUBMIT_INITIAL_PHRASE"}, [], [], false, 1, false);
+            let {getByLabelText, getByText} = joinGame();
+            await wait(() => {
+                const phraseInput = getByLabelText(/Your common phrase, saying, or word/);
+                act(() => {
+                    fireEvent.change(phraseInput, {target: {value: "No ghouls allowed"}});
+                });
+                const submitButton = getByText(/START/);
+                act(() => {
+                    fireEvent.click(submitButton);
+                });
+            });
+            expect(axios.post).not.toHaveBeenCalledWith("http://localhost:5000/phrase");
+            done();
         });
 
         test("hits the image API endpoint when you submit the image form", async (done) => {

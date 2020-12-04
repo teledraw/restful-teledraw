@@ -82,7 +82,8 @@ function App() {
       case "SUBMIT_INITIAL_PHRASE":
         return (
               <PhraseForm phraseSubmitted={phraseSubmitted}
-                          nextUsername={status.nextPlayerUsername}/>
+                          nextUsername={status.nextPlayerUsername}
+                          canStart={apiSummary ? apiSummary.canStart : false}/>
         );
       case "SUBMIT_PHRASE":
         return (
