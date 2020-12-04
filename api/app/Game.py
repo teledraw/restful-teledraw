@@ -41,6 +41,9 @@ class Game:
     def too_late_to_join(self):
         return not all(status == "SUBMIT_INITIAL_PHRASE" for status in list(p.get_status() for p in self._players))
 
+    def too_early_to_start(self):
+        return len(self._players) < 2
+
     def set_user_status(self, username, new_status):
         self.get_player(username).set_status(new_status)
         self.update_status_if_all_players_done()

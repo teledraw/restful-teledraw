@@ -134,6 +134,8 @@ class IntegrationTests(unittest.TestCase):
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['players'][0]['username'], "Kirk")
+        self.assertEqual(response.json['players'][0]['username'], "Kirk")
+        self.assertEqual(response.json['players'][0]['username'], "Kirk")
         self.assertEqual(response.json['players'][1]['username'], "Spock")
         self.assertEqual(response.json['players'][2]['username'], "Bones")
         self.assertEqual(response.json['players'][0]['status']['description'], "SUBMIT_INITIAL_PHRASE")
@@ -180,6 +182,25 @@ class IntegrationTests(unittest.TestCase):
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canJoin'], True)
+
+    def test_summaryReportsOnePersonIsNotEnoughToStart(self):
+        response = self.app.post('/join', json={'username': 'Kirk', 'game': 'NCC-1701'})
+        response = self.app.get('/game/NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['canStart'], False)
+
+    def test_summaryReportsTwoPeopleIsEnoughToStart(self):
+        self.addKirkBonesAndSpock()
+        response = self.app.get('/game/NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['canStart'], True)
+
+    def test_summary_aStartedGameGannotStart(self):
+        self.addKirkBonesAndSpock()
+        self.addPhrasesForKirkBonesAndSpock()
+        response = self.app.get('/game/NCC-1701')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['canStart'], False)
 
     def test_summaryReportsJoinableGameNegativelyAfterPhaseOne(self):
         self.addKirkBonesAndSpock()
