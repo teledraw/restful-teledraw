@@ -3,7 +3,7 @@ import React  from "react";
 export default function UserResultsSet(props) {
 
     function imageOrPhrase(index, submission) {
-        return index % 2 === 0 ? <div className="row-item">" {submission} "</div> : <img className="row-item" src={submission} alt=""/>;
+        return index % 2 === 0 ? <div className="row-item">" {submission} "</div> : <img className="row-item results-image" src={submission} alt=""/>;
     }
 
     function imageOrPhrasePlusLeaderText(index, submission) {

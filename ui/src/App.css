@@ -16,6 +16,11 @@
   text-align: center;
 }
 
+.results-image{
+  max-width:40%;
+  height:auto;
+}
+
 .drawing-tool-suggestion {
   margin-top:2%;
 }
