@@ -1,18 +1,18 @@
 .user-results-container {
-  display: flex;
-  flex-direction: row;
-  align-self: center;
-  width:100%;
-  margin: 5% 0;
-  align-items:center;
-  justify-content: space-between;
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+    width: 100%;
+    margin: 5% 0;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .flex-column-container {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
-.row-item{
-  margin: 0 20px;
+.row-item {
+    margin: 0 20px;
 }

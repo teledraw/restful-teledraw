@@ -1,4 +1,4 @@
-import React  from "react";
+import React from "react";
 
 export default function IdentityPanel({username, gamecode}) {
     return (<div className={"identity"}>

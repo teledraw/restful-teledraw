@@ -1,7 +1,7 @@
 import React from 'react';
 
 export default function AllPlayerStatusPanel(props) {
-    function transformStatusToHumanReadableWord(statusEnum){
+    function transformStatusToHumanReadableWord(statusEnum) {
         switch (statusEnum) {
             case "SUBMIT_PHRASE":
             case "SUBMIT_INITIAL_PHRASE":
@@ -13,7 +13,7 @@ export default function AllPlayerStatusPanel(props) {
         }
     }
 
-    function transformJoinabilityToHumanReadablePhrase(joinability){
+    function transformJoinabilityToHumanReadablePhrase(joinability) {
         switch (joinability) {
             case undefined:
                 return "???";
@@ -24,18 +24,16 @@ export default function AllPlayerStatusPanel(props) {
         }
     }
 
-    function transformPhaseNumberToHumanReadableWord(phaseNumber){
-        if(phaseNumber === undefined){
+    function transformPhaseNumberToHumanReadableWord(phaseNumber) {
+        if (phaseNumber === undefined) {
             return "???";
-        }
-        else return phaseNumber;
+        } else return phaseNumber;
     }
 
-    function getRoundNumberOrMessage(){
-        if(props.summary['phaseNumber'] > props.summary['players'].length){
+    function getRoundNumberOrMessage() {
+        if (props.summary['phaseNumber'] > props.summary['players'].length) {
             return "(Game Ending...)"
-        }
-        else{
+        } else {
             return (transformPhaseNumberToHumanReadableWord(props.summary['phaseNumber']) + " of " + (!props.summary['canJoin'] ? props.summary['players'].length : "???"));
         }
     }
@@ -45,11 +43,14 @@ export default function AllPlayerStatusPanel(props) {
         <div>Round: {getRoundNumberOrMessage()}</div>
         <div>Players:</div>
         <ol>
-        {props.summary['players'].map(player => {
-            return <li className={"other-player-status"} key={player.username}>{player.username + (player.username === props.username ? " (YOU): " : ": ") + transformStatusToHumanReadableWord(player.status.description)}</li>
-        })}
+            {props.summary['players'].map(player => {
+                return <li className={"other-player-status"}
+                           key={player.username}>{player.username + (player.username === props.username ? " (YOU): " : ": ") + transformStatusToHumanReadableWord(player.status.description)}</li>
+            })}
         </ol>
-        {props.summary['canJoin'] && <div className={"start-warning"}>Warning: The first submission locks the game's player list.  Make sure all players are in before submitting!</div>}
+        {props.summary['canJoin'] &&
+        <div className={"start-warning"}>Warning: The first submission locks the game's player list. Make sure all
+            players are in before submitting!</div>}
 
     </div>;
 }
