@@ -36,7 +36,7 @@ def create_app():
         (username, gamecode) = require_request_data(request, 'join game', in_body=True)
         if not username:
             return gamecode
-        elif game_exists(gamecode) and get_game_by_code(gamecode).too_late_to_join():
+        elif game_exists(gamecode) and get_game_by_code(gamecode).too_late_to_join() and not get_game_by_code(gamecode).is_over():
             return err("Cannot join a game in progress.")
         else:
             if not game_exists(gamecode):

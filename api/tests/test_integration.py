@@ -241,6 +241,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], "Cannot join a game in progress.")
 
+    def test_canJoinAgainAfterGameOver(self):
+        self.addKirkAndSpock()
+        self.addPhrasesForKirkAndSpock()
+        self.addImagesForKirkAndSpock()
+        response = self.app.post('/join', json={'username': 'Mikey', 'game': 'NCC-1701'})
+        self.assertEqual(response.status_code, 200)
+
     def test_imagePromptsIncludeProperPhrase(self):
         self.addKirkBonesAndSpock()
         self.addPhrasesForKirkBonesAndSpock()
