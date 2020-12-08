@@ -129,7 +129,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertPlayerStatus(username="Obrien", playerBefore="Bones", playerAfter="Worf")
         self.assertPlayerStatus(username="Worf", playerBefore="Obrien", playerAfter="Kirk")
 
-    def test_summaryEndpointCanSummarizePlayersAtGameStart(self):
+    def test_summaryEndpointCanSummarizeAtGameStart(self):
         self.addKirkBonesAndSpock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
@@ -142,7 +142,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['players'][1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
         self.assertEqual(response.json['players'][2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
 
-    def test_summaryEndpointCanSummarizePlayersMidRound(self):
+    def test_summaryEndpointCanSummarizeMidRound(self):
         self.addKirkBonesAndSpock()
         self.addPhrasesForKirkBonesAndSpock()
         self.post_image("Kirk", "kirk image")
@@ -155,8 +155,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['players'][1]['status']['description'], "SUBMIT_IMAGE")
         self.assertEqual(response.json['players'][2]['status']['description'], "SUBMIT_IMAGE")
         self.assertEqual(response.json['phaseNumber'], 2)
+        self.assertEqual(response.json['isOver'], False)
 
-    def test_summaryEndpointCanSummarizePlayersAtGameEnd(self):
+    def test_summaryEndpointCanSummarizeAtGameEnd(self):
         self.addKirkBonesAndSpock()
         self.addPhrasesForKirkBonesAndSpock()
         self.addImagesForKirkBonesAndSpock()
@@ -170,6 +171,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['players'][1]['status']['description'], "GAME_OVER")
         self.assertEqual(response.json['players'][2]['status']['description'], "GAME_OVER")
         self.assertEqual(response.json['phaseNumber'], 4)
+        self.assertEqual(response.json['isOver'], True)
 
     def test_summaryIncludesOnlyStatusDescriptionsNotFullStatuses(self):
         self.addKirkBonesAndSpock()

@@ -121,6 +121,7 @@ def create_app():
             status_summary['canJoin'] = not game.too_late_to_join()
             status_summary['canStart'] = not game.too_early_to_start() and game.get_phase_number() < 2
             status_summary['phaseNumber'] = game.get_phase_number()
+            status_summary['isOver'] = game.is_over()
             status_summary['players'] = []
             for user in game.get_playernames():
                 user_status = dict()
