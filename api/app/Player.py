@@ -1,10 +1,15 @@
 from datetime import datetime
 
+from flask_sqlalchemy import SQLAlchemy
 
-class Player:
-    _name = ""
-    _status = ""
-    _time_joined = None
+db = SQLAlchemy()
+
+class Player(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(), nullable=False)
+    status = db.Column(db.String(), nullable=False)
+    time_joined = db.Column(db.DateTime(), nullable=False)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
 
     def __init__(self, username):
         self._name = username

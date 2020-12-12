@@ -1,22 +1,25 @@
+from flask_sqlalchemy import SQLAlchemy
+
 from app.ImageSubmission import ImageSubmission
 from app.PhraseSubmission import PhraseSubmission
 from app.Player import Player
 
+db = SQLAlchemy()
+MAX_CODE_LENGTH = 40
 
-class Game:
-    _players = list()
+class Game(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(MAX_CODE_LENGTH), unique=True, nullable=False)
+
+    players = db.relationship(Player, lazy='joined')
     _image_submissions = list()
     _phrase_submissions = list()
-    code = ""
 
     def __init__(self, game_code):
         self.code = game_code
         self._players = list()
         self._image_submissions = list()
         self._phrase_submissions = list()
-
-    def get_players(self):
-        return self._players
 
     def get_player(self, username):
         return next((player for player in self._players if player.get_name() == username), None)
@@ -92,7 +95,7 @@ class Game:
         return list(filter(lambda x: x.get_player() == player, self._image_submissions if type == 'image' else self._phrase_submissions))
 
     def get_playernames(self):
-        return list(player.get_name() for player in self.get_players())
+        return [player.name for player in self.players]
 
     def get_next_player(self, username):
         usernames = self.get_playernames()
