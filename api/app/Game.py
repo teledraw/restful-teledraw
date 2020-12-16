@@ -1,10 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 
+from app import db
 from app.ImageSubmission import ImageSubmission
 from app.PhraseSubmission import PhraseSubmission
 from app.Player import Player
 
-db = SQLAlchemy()
 MAX_CODE_LENGTH = 40
 
 class Game(db.Model):
@@ -52,22 +52,22 @@ class Game(db.Model):
         self.update_status_if_all_players_done()
 
     def update_status_if_all_players_done(self):
-        if all(status == 'WAIT' for status in list(p.get_status() for p in self.get_players())):
-            next_status = 'SUBMIT_PHRASE' if self.get_phase_number() % 2 == 1 else 'SUBMIT_IMAGE'
+        if all(status == 'WAIT' for status in (p.get_status() for p in self.players))   :
+            next_status = 'SUBMIT_PHRASE' if self.get_phrase_number() % 2 == 1 else 'SUBMIT_IMAGE'
             if self.is_over():
                 next_status = 'GAME_OVER'
             for user in self.get_playernames():
                 self.set_user_status(user, next_status)
 
-    def get_phase_number(self):
-        current_number_of_players = len(self.get_players())
+    def get_phrase_number(self):
+        current_number_of_players = len(self.players)
         if len(self._phrase_submissions) < current_number_of_players:
             return 1
         elif len(self._image_submissions) < current_number_of_players:
             return 2
         else:
-            completed_phrase_rounds = len(self._phrase_submissions) / len(self.get_players())
-            completed_image_rounds = len(self._image_submissions) / len(self.get_players())
+            completed_phrase_rounds = len(self._phrase_submissions) / len(self.players)
+            completed_image_rounds = len(self._image_submissions) / len(self.players)
             return 1 + completed_image_rounds + completed_phrase_rounds
 
     def save_phrase(self, username, new_phrase):
@@ -121,8 +121,14 @@ class Game(db.Model):
                 'nextPlayerUsername': self.get_next_player(username)}
 
     def get_all_submission_threads_indexed_by_user(self):
+        return [
+            {
+                "originator": username,
+                "submissions": self.get_user_submission_thread(username)
+            } for p in self.players
+        ]
         to_return = list()
-        for username in list(p.get_name() for p in self.get_players()):
+        for username in list(p.get_name() for p in self.players):
             to_return.append({"originator": username, "submissions": self.get_user_submission_thread(username)})
         return to_return
 

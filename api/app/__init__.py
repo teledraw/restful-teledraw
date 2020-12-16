@@ -5,7 +5,10 @@ from flask import jsonify
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
+db = SQLAlchemy()
+
 from app.Game import Game
+from app.Player import Player
 
 _games = list()
 
@@ -18,15 +21,14 @@ def game_exists(gamecode):
 
 
 def create_game(game_code):
-
-    _games.append(Game(game_code))
-
+    db.session.add(Game(game_code))
+    db.session.commit()
 
 def create_app():
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://schala:ZebMaghreb34@localhost:3306/schala'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-    app.db = SQLAlchemy(app)
+    db.init_app(app)
     cors = CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
 
