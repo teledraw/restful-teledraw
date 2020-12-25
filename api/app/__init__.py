@@ -13,12 +13,10 @@ from app.Player import Player
 _games = list()
 
 def get_game_by_code(game_code):
-    return next((game for game in _games if game.code == game_code), None)
+    return Game.query.filter_by(code=game_code).one_or_none()
 
-
-def game_exists(gamecode):
-    return any(game.code == gamecode for game in _games)
-
+def game_exists(game_code):
+    return get_game_by_code(game_code)
 
 def create_game(game_code):
     db.session.add(Game(game_code))
@@ -26,7 +24,7 @@ def create_game(game_code):
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://schala:ZebMaghreb34@localhost:3306/schala'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:foo@localhost:3306/schala'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     db.init_app(app)
     cors = CORS(app)
@@ -158,6 +156,8 @@ def create_app():
     @app.route('/restart', methods=['POST'])
     @cross_origin()
     def clear_all():
+        Player.query.delete()
+        Game.query.delete()
         _games.clear()
         return '', 200
 

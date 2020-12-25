@@ -22,10 +22,10 @@ class Game(db.Model):
         self._phrase_submissions = list()
 
     def get_player(self, username):
-        return next((player for player in self._players if player.get_name() == username), None)
+        return next((player for player in self.players if player.get_name() == username), None)
 
     def is_over(self):
-        number_of_users = len(self.get_players())
+        number_of_users = len(self.players)
         if number_of_users < 1:
             return False
         else:
@@ -42,10 +42,10 @@ class Game(db.Model):
         return username in self.get_playernames()
 
     def too_late_to_join(self):
-        return not all(status == "SUBMIT_INITIAL_PHRASE" for status in list(p.get_status() for p in self._players))
+        return not all(status == "SUBMIT_INITIAL_PHRASE" for status in list(p.get_status() for p in self.players))
 
     def too_early_to_start(self):
-        return len(self._players) < 2
+        return len(self.players) < 2
 
     def set_user_status(self, username, new_status):
         self.get_player(username).set_status(new_status)
@@ -53,13 +53,13 @@ class Game(db.Model):
 
     def update_status_if_all_players_done(self):
         if all(status == 'WAIT' for status in (p.get_status() for p in self.players))   :
-            next_status = 'SUBMIT_PHRASE' if self.get_phrase_number() % 2 == 1 else 'SUBMIT_IMAGE'
+            next_status = 'SUBMIT_PHRASE' if self.get_phase_number() % 2 == 1 else 'SUBMIT_IMAGE'
             if self.is_over():
                 next_status = 'GAME_OVER'
             for user in self.get_playernames():
                 self.set_user_status(user, next_status)
 
-    def get_phrase_number(self):
+    def get_phase_number(self):
         current_number_of_players = len(self.players)
         if len(self._phrase_submissions) < current_number_of_players:
             return 1
@@ -80,7 +80,7 @@ class Game(db.Model):
 
     def join(self, username):
         if not self.has_player(username):
-            self._players.append(Player(username))
+            self.players.append(Player(username))
             self.set_user_status(username, 'SUBMIT_INITIAL_PHRASE')
 
     def get_phrase_prompt(self, username):
@@ -123,8 +123,8 @@ class Game(db.Model):
     def get_all_submission_threads_indexed_by_user(self):
         return [
             {
-                "originator": username,
-                "submissions": self.get_user_submission_thread(username)
+                "originator": p.name,
+                "submissions": self.get_user_submission_thread(p.name)
             } for p in self.players
         ]
         to_return = list()

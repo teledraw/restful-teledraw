@@ -1,6 +1,7 @@
 import unittest
 from flask import current_app
 
+from app import db
 
 class IntegrationTests(unittest.TestCase):
     def setUp(self):
@@ -9,6 +10,8 @@ class IntegrationTests(unittest.TestCase):
         # propagate the exceptions to the test client
         self.app.testing = True
         self.app.post("/restart")
+
+        db.create_all()
 
     def tearDown(self):
         pass
