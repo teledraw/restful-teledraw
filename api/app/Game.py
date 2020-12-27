@@ -71,15 +71,20 @@ class Game(db.Model):
     def save_phrase(self, username, new_phrase):
         self.phrase_submissions.append(PhraseSubmission(self.get_player(username), new_phrase))
         self.set_user_status(username, "WAIT")
+        db.session.commit()
+
 
     def save_image(self, username, new_image):
         self.image_submissions.append(ImageSubmission(self.get_player(username), new_image))
         self.set_user_status(username, "WAIT")
+        db.session.commit()
+
 
     def join(self, username):
         if not self.has_player(username):
             self.players.append(Player(username))
             self.set_user_status(username, 'SUBMIT_INITIAL_PHRASE')
+            db.session.commit()
 
     def get_phrase_prompt(self, username):
         username_of_phrase_source = self.get_previous_player(username)

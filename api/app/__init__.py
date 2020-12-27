@@ -91,6 +91,7 @@ def create_app():
                     'username'] + '\'s turn to submit a phrase.')
             elif game.has_player(username):
                 game.save_phrase(username, request.json['phrase'])
+                db.session.commit()
                 return '', 200
             return err('Unexplained error submitting phrase')
 
