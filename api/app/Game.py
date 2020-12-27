@@ -130,10 +130,6 @@ class Game(db.Model):
                 "submissions": self.get_user_submission_thread(p.name)
             } for p in self.players
         ]
-        to_return = list()
-        for username in list(p.get_name() for p in self.players):
-            to_return.append({"originator": username, "submissions": self.get_user_submission_thread(username)})
-        return to_return
 
     def get_user_submission_thread(self, username):
         users = self.get_playernames()
