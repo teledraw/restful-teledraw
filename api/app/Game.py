@@ -11,15 +11,13 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(MAX_CODE_LENGTH), unique=True, nullable=False)
 
+    image_submissions = db.relationship(ImageSubmission, lazy='joined')
+    phrase_submissions = db.relationship(PhraseSubmission, lazy='joined')
+
     players = db.relationship(Player, lazy='joined')
-    _image_submissions = list()
-    _phrase_submissions = list()
 
     def __init__(self, game_code):
         self.code = game_code
-        self._players = list()
-        self._image_submissions = list()
-        self._phrase_submissions = list()
 
     def get_player(self, username):
         return next((player for player in self.players if player.get_name() == username), None)
@@ -29,7 +27,7 @@ class Game(db.Model):
         if number_of_users < 1:
             return False
         else:
-            return len(self._phrase_submissions) + len(self._image_submissions) == number_of_users ** 2
+            return len(self.phrase_submissions) + len(self.image_submissions) == number_of_users ** 2
 
     def is_action_allowed(self, username, action):
         if action == "submitphrase":
@@ -61,21 +59,21 @@ class Game(db.Model):
 
     def get_phase_number(self):
         current_number_of_players = len(self.players)
-        if len(self._phrase_submissions) < current_number_of_players:
+        if len(self.phrase_submissions) < current_number_of_players:
             return 1
-        elif len(self._image_submissions) < current_number_of_players:
+        elif len(self.image_submissions) < current_number_of_players:
             return 2
         else:
-            completed_phrase_rounds = len(self._phrase_submissions) / len(self.players)
-            completed_image_rounds = len(self._image_submissions) / len(self.players)
+            completed_phrase_rounds = len(self.phrase_submissions) / len(self.players)
+            completed_image_rounds = len(self.image_submissions) / len(self.players)
             return 1 + completed_image_rounds + completed_phrase_rounds
 
     def save_phrase(self, username, new_phrase):
-        self._phrase_submissions.append(PhraseSubmission(self.get_player(username), new_phrase))
+        self.phrase_submissions.append(PhraseSubmission(self.get_player(username), new_phrase))
         self.set_user_status(username, "WAIT")
 
     def save_image(self, username, new_image):
-        self._image_submissions.append(ImageSubmission(self.get_player(username), new_image))
+        self.image_submissions.append(ImageSubmission(self.get_player(username), new_image))
         self.set_user_status(username, "WAIT")
 
     def join(self, username):
@@ -92,7 +90,7 @@ class Game(db.Model):
         return self.get_all_submissions_by_player(self.get_player(username_of_image_source))[-1].get_image()
 
     def get_all_submissions_by_player(self, player, type='image'):
-        return list(filter(lambda x: x.get_player() == player, self._image_submissions if type == 'image' else self._phrase_submissions))
+        return list(filter(lambda x: x.get_player() == player, self.image_submissions if type == 'image' else self.phrase_submissions))
 
     def get_playernames(self):
         return [player.name for player in self.players]

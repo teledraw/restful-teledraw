@@ -4,13 +4,15 @@ from flask import request
 from flask import jsonify
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 
 db = SQLAlchemy()
 
 from app.Game import Game
 from app.Player import Player
+from app.PhraseSubmission import PhraseSubmission
+from app.ImageSubmission import ImageSubmission
 
-_games = list()
 
 def get_game_by_code(game_code):
     return Game.query.filter_by(code=game_code).one_or_none()
@@ -24,7 +26,7 @@ def create_game(game_code):
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:foo@localhost:3306/schala'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://test:test@localhost:3306/teledraw'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     db.init_app(app)
     cors = CORS(app)
@@ -156,9 +158,10 @@ def create_app():
     @app.route('/restart', methods=['POST'])
     @cross_origin()
     def clear_all():
+        PhraseSubmission.query.delete()
+        ImageSubmission.query.delete()
         Player.query.delete()
         Game.query.delete()
-        _games.clear()
         return '', 200
 
     def require_request_data(_request, for_task, variables=['username', 'game'], in_body=False):

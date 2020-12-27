@@ -11,8 +11,6 @@ class IntegrationTests(unittest.TestCase):
         self.app.testing = True
         self.app.post("/restart")
 
-        db.create_all()
-
     def tearDown(self):
         pass
 
