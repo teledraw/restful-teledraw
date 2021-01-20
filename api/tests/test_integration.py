@@ -1,6 +1,7 @@
 import unittest
 from flask import current_app
 
+from app import db
 
 class IntegrationTests(unittest.TestCase):
     def setUp(self):
