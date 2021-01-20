@@ -10,71 +10,26 @@ class IntegrationTests(unittest.TestCase):
         self.app.testing = True
         self.app.post("/restart")
 
-    def tearDown(self):
+    def tear_down(self):
         pass
 
-    def assertPlayerStatus(self, statusMessage="", username="", game="NCC-1701", prompt="", playerBefore="",
-                           playerAfter="", statusCode=200):
-        response = self.app.get('/game/'+game+'/player/'+username)
-        self.assertEqual(response.status_code, statusCode)
-        if (statusMessage):
-            self.assertEqual(response.get_json()['description'], statusMessage)
-        if (prompt):
-            self.assertEqual(response.get_json()['prompt'], prompt)
-        if (playerBefore):
-            self.assertEqual(response.get_json()['previousPlayerUsername'], playerBefore)
-        if (playerAfter):
-            self.assertEqual(response.get_json()['nextPlayerUsername'], playerAfter)
+    # region integration_tests
 
-    def post_image(self, username="", image="", game="NCC-1701"):
-        return self.app.post('/image', json={'username': username, 'image': image, 'game': game})
-
-    def get_results(self, game="NCC-1701"):
-        if game:
-            return self.app.get("/game/" + game + "/results")
-        else:
-            return self.app.get("/game/results")
-
-    def assertResultsError(self, error, game="NCC-1701", statusCode=400):
-        response = self.get_results(game)
-        self.assertEqual(response.status_code, statusCode)
-        self.assertEqual(response.get_json()['error'], error)
-
-    def assertPostImageError(self, username="", image="", game="", error="", status_code=400):
-        response = self.post_image(username, image, game)
-        self.assertEqual(response.status_code, status_code)
-        self.assertEqual(response.get_json()['error'],
-                         error)
-
-    def post_phrase(self, username="", phrase="", game="NCC-1701"):
-        return self.app.post('/phrase', json={'username': username, 'phrase': phrase, 'game': game})
-
-    def assertPostPhraseError(self, username="", phrase="", game="", error="", status_code=400):
-        response = self.post_phrase(username, phrase, game)
-        self.assertEqual(response.status_code, status_code)
-        self.assertEqual(response.get_json()['error'], error)
-
-    def assertStatusError(self, errorMessage="", username="", game=""):
-        url = ('/game/' + ((game + '/') if len(game) > 0 else "")) + ('player' + (('/' + username) if len(username) > 0 else ""))
-        response = self.app.get(url)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()['error'], errorMessage)
-
-    def test_helloWorldEndpoint(self):
+    def test_hello_world_endpoint(self):
         response = self.app.get('/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data.decode('utf-8'), 'This is the Arktika API base URL.  Please add an endpoint '
                                                         'name to your request to get started.')
 
-    def test_canJoinByPostingUsernameAndGameCode(self):
+    def test_can_join_by_posting_username_and_game_code(self):
         response = self.app.post('/join', json={'username': 'Mikey', 'game': 'gamey'})
         self.assertEqual(response.status_code, 200)
 
-    def test_cannotJoinWithoutAPostBody(self):
+    def test_cannot_join_without_a_post_body(self):
         response = self.app.get('/join')
         self.assertEqual(response.status_code, 405)
 
-    def test_canEraseTheGame(self):
+    def test_can_erase_the_game(self):
         response = self.app.post('/join', json={'username': 'Mikey', 'game': 'gamey'})
         self.assertEqual(response.status_code, 200)
         response = self.app.post('/restart')
@@ -84,53 +39,53 @@ class IntegrationTests(unittest.TestCase):
         self.assertTrue(response.json and 'error' in response.json.keys())
         self.assertEqual(response.json['error'], 'No such game: "gamey".')
 
-    def test_cannotJoinWithoutAUsername(self):
+    def test_cannot_join_without_a_username(self):
         response = self.app.post('/join', json={'game': 'XYZORG'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], "Cannot join game: Missing username.")
 
-    def test_cannotJoinWithoutPostingAGameName(self):
+    def test_cannot_join_without_posting_a_game_name(self):
         response = self.app.post('/join', json={'username': 'Jimmy'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], "Cannot join game: Missing game.")
 
-    def test_cannotGetStatusWithoutAUsername(self):
-        self.addKirkAndSpock()
-        self.assertStatusError(errorMessage="Cannot get player status: missing username.", username="", game="NCC-1701")
+    def test_cannot_get_status_without_a_username(self):
+        self.add_players_kirk_and_spock()
+        self.assert_status_error(error_message="Cannot get player status: missing username.", username="", game="NCC-1701")
 
-    def test_cannotGetStatusWithoutAGameName(self):
-        self.addKirkAndSpock()
-        self.assertStatusError(errorMessage="Cannot get player status for Kirk: missing game code.", username="Kirk")
+    def test_cannot_get_status_without_a_game_name(self):
+        self.add_players_kirk_and_spock()
+        self.assert_status_error(error_message="Cannot get player status for Kirk: missing game code.", username="Kirk")
 
-    def test_canJoinAndAskGameForNextStep(self):
-        self.addKirkAndSpock()
-        self.assertPlayerStatus("SUBMIT_INITIAL_PHRASE", "Kirk")
+    def test_can_join_and_ask_game_for_next_step(self):
+        self.add_players_kirk_and_spock()
+        self.assert_player_status("SUBMIT_INITIAL_PHRASE", "Kirk")
 
-    def test_getNextStepSays400IfYouHaveNotJoined(self):
-        self.assertStatusError('No such game: "abc".', "Mikey", "abc")
+    def test_get_next_step_says400_if_you_have_not_joined(self):
+        self.assert_status_error('No such game: "abc".', "Mikey", "abc")
 
-    def test_statusEndpointCorrectlyIdentifiesPlayersBeforeAndAfterYou_2player(self):
-        self.addKirkAndSpock()
-        self.assertPlayerStatus(username="Kirk", playerBefore="Spock", playerAfter="Spock")
-        self.assertPlayerStatus(username="Spock", playerBefore="Kirk", playerAfter="Kirk")
+    def test_status_endpoint_correctly_identifies_players_before_and_after_you_2player(self):
+        self.add_players_kirk_and_spock()
+        self.assert_player_status(username="Kirk", player_before="Spock", player_after="Spock")
+        self.assert_player_status(username="Spock", player_before="Kirk", player_after="Kirk")
 
-    def test_statusEndpointCorrectlyIdentifiesPlayersBeforeAndAfterYou_3player(self):
-        self.addKirkBonesAndSpock()
-        self.assertPlayerStatus(username="Kirk", playerBefore="Bones", playerAfter="Spock")
-        self.assertPlayerStatus(username="Spock", playerBefore="Kirk", playerAfter="Bones")
-        self.assertPlayerStatus(username="Bones", playerBefore="Spock", playerAfter="Kirk")
+    def test_status_endpoint_correctly_identifies_players_before_and_after_you_3player(self):
+        self.add_players_kirk_bones_and_spock()
+        self.assert_player_status(username="Kirk", player_before="Bones", player_after="Spock")
+        self.assert_player_status(username="Spock", player_before="Kirk", player_after="Bones")
+        self.assert_player_status(username="Bones", player_before="Spock", player_after="Kirk")
 
-    def test_statusEndpointCorrectlyIdentifiesPlayersBeforeAndAfterYou_5player(self):
-        self.addKirkBonesAndSpock()
-        self.add_obrien_and_worf(game='NCC-1701')
-        self.assertPlayerStatus(username="Kirk", playerBefore="Worf", playerAfter="Spock")
-        self.assertPlayerStatus(username="Spock", playerBefore="Kirk", playerAfter="Bones")
-        self.assertPlayerStatus(username="Bones", playerBefore="Spock", playerAfter="Obrien")
-        self.assertPlayerStatus(username="Obrien", playerBefore="Bones", playerAfter="Worf")
-        self.assertPlayerStatus(username="Worf", playerBefore="Obrien", playerAfter="Kirk")
+    def test_status_endpoint_correctly_identifies_players_before_and_after_you_5player(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_players_obrien_and_worf(game='NCC-1701')
+        self.assert_player_status(username="Kirk", player_before="Worf", player_after="Spock")
+        self.assert_player_status(username="Spock", player_before="Kirk", player_after="Bones")
+        self.assert_player_status(username="Bones", player_before="Spock", player_after="Obrien")
+        self.assert_player_status(username="Obrien", player_before="Bones", player_after="Worf")
+        self.assert_player_status(username="Worf", player_before="Obrien", player_after="Kirk")
 
-    def test_summaryEndpointCanSummarizeAtGameStart(self):
-        self.addKirkBonesAndSpock()
+    def test_summary_endpoint_can_summarize_at_game_start(self):
+        self.add_players_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['players'][0]['username'], "Kirk")
@@ -142,9 +97,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['players'][1]['status']['description'], "SUBMIT_INITIAL_PHRASE")
         self.assertEqual(response.json['players'][2]['status']['description'], "SUBMIT_INITIAL_PHRASE")
 
-    def test_summaryEndpointCanSummarizeMidRound(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
+    def test_summary_endpoint_can_summarize_mid_round(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
         self.post_image("Kirk", "kirk image")
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
@@ -157,10 +112,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['phaseNumber'], 2)
         self.assertEqual(response.json['isOver'], False)
 
-    def test_summaryEndpointCanSummarizeAtGameEnd(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
-        self.addImagesForKirkBonesAndSpock()
+    def test_summary_endpoint_can_summarize_at_game_end(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
+        self.add_images_for_kirk_bones_and_spock()
         self.add_second_phrases_for_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
@@ -173,175 +128,175 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.json['phaseNumber'], 4)
         self.assertEqual(response.json['isOver'], True)
 
-    def test_summaryIncludesOnlyStatusDescriptionsNotFullStatuses(self):
-        self.addKirkBonesAndSpock()
+    def test_summary_includes_only_status_descriptions_not_full_statuses(self):
+        self.add_players_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(list(response.json['players'][0]['status'].keys()), ['description'])
 
-    def test_summaryReportsJoinableGamePositivelyAtStart(self):
-        self.addKirkBonesAndSpock()
+    def test_summary_reports_joinable_game_positively_at_start(self):
+        self.add_players_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canJoin'], True)
 
-    def test_summaryReportsOnePersonIsNotEnoughToStart(self):
+    def test_summary_reports_one_person_is_not_enough_to_start(self):
         response = self.app.post('/join', json={'username': 'Kirk', 'game': 'NCC-1701'})
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canStart'], False)
 
-    def test_summaryReportsTwoPeopleIsEnoughToStart(self):
-        self.addKirkBonesAndSpock()
+    def test_summary_reports_two_people_is_enough_to_start(self):
+        self.add_players_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canStart'], True)
 
-    def test_summary_aStartedGameGannotStart(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
+    def test_summary_a_started_game_gannot_start(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canStart'], False)
 
-    def test_summaryReportsJoinableGameNegativelyAfterPhaseOne(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
+    def test_summary_reports_joinable_game_negatively_after_phase_one(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['canJoin'], False)
         self.assertEqual(response.json['phaseNumber'], 2)
 
-    def test_summaryRequiresGameName(self):
-        self.addKirkBonesAndSpock()
+    def test_summary_requires_game_name(self):
+        self.add_players_kirk_bones_and_spock()
         response = self.app.get('/game')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], "Cannot get current summary: missing game code.")
 
-    def test_summaryWarnsOfInvalidGameName(self):
-        self.addKirkBonesAndSpock()
+    def test_summary_warns_of_invalid_game_name(self):
+        self.add_players_kirk_bones_and_spock()
         response = self.app.get('/game/NCC-1701C')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], 'No such game: "NCC-1701C".')
 
-    def test_canPostInitialPhrase(self):
-        self.addKirkAndSpock()
+    def test_can_post_initial_phrase(self):
+        self.add_players_kirk_and_spock()
         response = self.post_phrase("Kirk", 'Ever dance with the devil in the pale moonlight?')
         self.assertEqual(response.status_code, 200)
-        self.assertPlayerStatus("WAIT", "Kirk")
+        self.assert_player_status("WAIT", "Kirk")
 
-    def test_promptForImageAfterAllPlayersSubmitInitialPhrase(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.assertPlayerStatus("SUBMIT_IMAGE", "Kirk")
-        self.assertPlayerStatus("SUBMIT_IMAGE", "Spock")
+    def test_prompt_for_image_after_all_players_submit_initial_phrase(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.assert_player_status("SUBMIT_IMAGE", "Kirk")
+        self.assert_player_status("SUBMIT_IMAGE", "Spock")
 
-    def test_cannotJoinAfterAllPlayersSubmitInitialPhrase(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
+    def test_cannot_join_after_all_players_submit_initial_phrase(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
         response = self.app.post('/join', json={'username': 'Mikey', 'game': 'NCC-1701'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'], "Cannot join a game in progress.")
 
-    def test_canJoinAgainAfterGameOver(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.addImagesForKirkAndSpock()
+    def test_can_join_again_after_game_over(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.add_images_for_kirk_and_spock()
         response = self.app.post('/join', json={'username': 'Mikey', 'game': 'NCC-1701'})
         self.assertEqual(response.status_code, 200)
 
-    def test_imagePromptsIncludeProperPhrase(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
-        self.assertPlayerStatus("SUBMIT_IMAGE", "Kirk", prompt='That is devilishly clever.', statusCode=200)
-        self.assertPlayerStatus("SUBMIT_IMAGE", "Spock", prompt='Ever dance with the devil in the pale moonlight?', statusCode=200)
-        self.assertPlayerStatus("SUBMIT_IMAGE", "Bones", prompt='The devil went down to Georgia.', statusCode=200)
+    def test_image_prompts_include_proper_phrase(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
+        self.assert_player_status("SUBMIT_IMAGE", "Kirk", prompt='That is devilishly clever.', status_code=200)
+        self.assert_player_status("SUBMIT_IMAGE", "Spock", prompt='Ever dance with the devil in the pale moonlight?', status_code=200)
+        self.assert_player_status("SUBMIT_IMAGE", "Bones", prompt='The devil went down to Georgia.', status_code=200)
 
-    def test_cannotSubmitPhraseWhenItIsImageTime(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
+    def test_cannot_submit_phrase_when_it_is_image_time(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
         response = self.post_phrase("Spock", 'The devil is in the details.')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'],
                          "Cannot submit phrase: it is not Spock's turn to submit a phrase.")
 
-    def test_cannotSubmitPhraseWithoutAUsername(self):
-        self.addKirkAndSpock()
+    def test_cannot_submit_phrase_without_a_username(self):
+        self.add_players_kirk_and_spock()
         response = self.app.post('/phrase', json={'username': '', 'phrase': 'The devil is in the details.'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'],
                          "Cannot submit phrase: Missing username.")
 
-    def test_cannotSubmitImageWhenItIsPhraseTime(self):
-        self.addKirkAndSpock()
+    def test_cannot_submit_image_when_it_is_phrase_time(self):
+        self.add_players_kirk_and_spock()
         response = self.post_image("Spock", "spock image")
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'],
                          "Cannot submit image: it is not Spock's turn to submit an image.")
 
-    def test_cannotSubmitImageWithoutUsername(self):
-        self.addKirkAndSpock()
+    def test_cannot_submit_image_without_username(self):
+        self.add_players_kirk_and_spock()
         response = self.app.post('/image', json={'username': '',
                                                  'image': 'spock image'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json()['error'],
                          "Cannot submit image: Missing username.")
 
-    def test_cannotSubmitPhraseWithoutGameName(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.assertPostPhraseError("Kirk", "roll the dice", error="Cannot submit phrase: Missing game.")
+    def test_cannot_submit_phrase_without_game_name(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.assert_post_phrase_error("Kirk", "roll the dice", error="Cannot submit phrase: Missing game.")
 
-    def test_cannotSubmitImageWithoutGameName(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.assertPostImageError("Kirk", "pix", error="Cannot submit image: Missing game.")
+    def test_cannot_submit_image_without_game_name(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.assert_post_image_error("Kirk", "pix", error="Cannot submit image: Missing game.")
 
-    def test_submitImageWarnsOfInvalidGameName(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.assertPostImageError("Kirk", "an image", "NCC-1701C", 'No such game: "NCC-1701C".')
+    def test_submit_image_warns_of_invalid_game_name(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.assert_post_image_error("Kirk", "an image", "NCC-1701C", 'No such game: "NCC-1701C".')
 
-    def test_submitPhraseWarnsOfInvalidGameName(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.assertPostPhraseError("Kirk", "the devils of our nature", "NCC-1701C", 'No such game: "NCC-1701C".')
+    def test_submit_phrase_warns_of_invalid_game_name(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.assert_post_phrase_error("Kirk", "the devils of our nature", "NCC-1701C", 'No such game: "NCC-1701C".')
 
-    def test_phrasePromptsIncludeProperImage(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
-        self.addImagesForKirkBonesAndSpock()
+    def test_phrase_prompts_include_proper_image(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
+        self.add_images_for_kirk_bones_and_spock()
 
-        self.assertPlayerStatus("SUBMIT_PHRASE", "Kirk", prompt='bones image')
+        self.assert_player_status("SUBMIT_PHRASE", "Kirk", prompt='bones image')
 
-    def test_statusIsGameOverForEveryoneAfterOneSubmissionPerPlayer(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.addImagesForKirkAndSpock()
-        self.assertPlayerStatus("GAME_OVER", "Kirk")
-        self.assertPlayerStatus("GAME_OVER", "Spock")
+    def test_status_is_game_over_for_everyone_after_one_submission_per_player(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.add_images_for_kirk_and_spock()
+        self.assert_player_status("GAME_OVER", "Kirk")
+        self.assert_player_status("GAME_OVER", "Spock")
 
-    def test_cannotGetResultsPriorToGameBeingOver(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.assertResultsError('Cannot get results: game not over.')
+    def test_cannot_get_results_prior_to_game_being_over(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.assert_results_error('Cannot get results: game not over.')
 
-    def test_cannotGetResultsWithoutGameCode(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.addImagesForKirkAndSpock()
-        self.assertResultsError('Cannot get results: missing game code.', '')
+    def test_cannot_get_results_without_game_code(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.add_images_for_kirk_and_spock()
+        self.assert_results_error('Cannot get results: missing game code.', '')
 
-    def test_cannotGetResultsWithoutValidGameCode(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.addImagesForKirkAndSpock()
-        self.assertResultsError('Cannot get results.  No such game: "NCC-1701C".', 'NCC-1701C')
+    def test_cannot_get_results_without_valid_game_code(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.add_images_for_kirk_and_spock()
+        self.assert_results_error('Cannot get results.  No such game: "NCC-1701C".', 'NCC-1701C')
 
-    def test_canGetResultsAfterCompletedTwoPlayerGame(self):
-        self.addKirkAndSpock()
-        self.addPhrasesForKirkAndSpock()
-        self.addImagesForKirkAndSpock()
+    def test_can_get_results_after_completed_two_player_game(self):
+        self.add_players_kirk_and_spock()
+        self.add_phrases_for_kirk_and_spock()
+        self.add_images_for_kirk_and_spock()
         response = self.get_results()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()[0]['originator'], "Kirk")
@@ -352,10 +307,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[1]['submissions'][0], "The devil went down to Georgia.")
         self.assertEqual(response.get_json()[1]['submissions'][1], "kirk image")
 
-    def test_canGetResultsAfterCompletedThreePlayerGame(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
-        self.addImagesForKirkBonesAndSpock()
+    def test_can_get_results_after_completed_three_player_game(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
+        self.add_images_for_kirk_bones_and_spock()
         self.add_second_phrases_for_kirk_bones_and_spock()
         response = self.get_results()
         self.assertEqual(response.status_code, 200)
@@ -374,8 +329,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
         self.assertEqual(response.get_json()[2]['submissions'][2], "Spock phrase 2")
 
-    def test_canGetResultsAfterACompletedThreePlayerGame_DifferentSubmissionOrder(self):
-        self.addKirkBonesAndSpock()
+    def test_can_get_results_after_a_completed_three_player_game_with_different_submission_order(self):
+        self.add_players_kirk_bones_and_spock()
 
         self.post_phrase('Kirk', 'Ever dance with the devil in the pale moonlight?')
         self.post_phrase('Spock', 'The devil went down to Georgia.')
@@ -401,10 +356,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
         self.assertEqual(response.get_json()[2]['submissions'][2], "Spock phrase 2")
 
-    def test_threePlayerGameInWhichPhrasesAreCorrectlyGuessed(self):
-        self.addKirkBonesAndSpock()
-        self.addPhrasesForKirkBonesAndSpock()
-        self.addImagesForKirkBonesAndSpock()
+    def test_three_player_game_in_which_phrases_are_correctly_guessed(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_phrases_for_kirk_bones_and_spock()
+        self.add_images_for_kirk_bones_and_spock()
         self.post_phrase('Bones', 'Ever dance with the devil in the pale moonlight?')
         self.post_phrase('Kirk', 'The devil went down to Georgia.')
         self.post_phrase('Spock', 'That is devilishly clever.')
@@ -424,41 +379,84 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(response.get_json()[2]['submissions'][1], "kirk image")
         self.assertEqual(response.get_json()[2]['submissions'][2], "That is devilishly clever.")
 
-    def test_canConductTwoGamesAtOnce(self):
-        self.addKirkAndSpock()
-        self.add_obrien_and_worf()
-        self.addPhrasesForKirkAndSpock()
-        self.assertPlayerStatus('SUBMIT_IMAGE', 'Kirk')
-        self.assertPlayerStatus('SUBMIT_INITIAL_PHRASE', 'Obrien', 'NCC-1701D')
-        self.addImagesForKirkAndSpock()
-        self.assertPlayerStatus("GAME_OVER", "Kirk")
-        self.assertPlayerStatus('SUBMIT_INITIAL_PHRASE', 'Obrien', 'NCC-1701D')
+    def test_can_conduct_two_games_at_once(self):
+        self.add_players_kirk_and_spock()
+        self.add_players_obrien_and_worf()
+        self.add_phrases_for_kirk_and_spock()
+        self.assert_player_status('SUBMIT_IMAGE', 'Kirk')
+        self.assert_player_status('SUBMIT_INITIAL_PHRASE', 'Obrien', 'NCC-1701D')
+        self.add_images_for_kirk_and_spock()
+        self.assert_player_status("GAME_OVER", "Kirk")
+        self.assert_player_status('SUBMIT_INITIAL_PHRASE', 'Obrien', 'NCC-1701D')
         self.add_phrases_for_obrien_and_worf()
         self.add_images_for_obrien_and_worf()
-        self.assertPlayerStatus("GAME_OVER", "Worf", "NCC-1701D")
+        self.assert_player_status("GAME_OVER", "Worf", "NCC-1701D")
 
-    def test_canPlayAFivePlayerGame(self):
-        self.addKirkBonesAndSpock()
-        self.add_obrien_and_worf(game='NCC-1701')
-        self.addPhrasesForKirkBonesAndSpock()
+    def test_can_play_a_five_player_game(self):
+        self.add_players_kirk_bones_and_spock()
+        self.add_players_obrien_and_worf(game='NCC-1701')
+        self.add_phrases_for_kirk_bones_and_spock()
         self.add_phrases_for_obrien_and_worf(game='NCC-1701')
-        self.assertPlayersStatus(["Kirk", "Spock", "Bones", "Obrien", "Worf"], "SUBMIT_IMAGE")
-        self.addImagesForKirkBonesAndSpock()
-        self.assertPlayerStatus("WAIT", "Spock")
+        self.assert_players_status(["Kirk", "Spock", "Bones", "Obrien", "Worf"], "SUBMIT_IMAGE")
+        self.add_images_for_kirk_bones_and_spock()
+        self.assert_player_status("WAIT", "Spock")
         self.add_images_for_obrien_and_worf(game='NCC-1701')
-        self.assertPlayerStatus('SUBMIT_PHRASE', 'Bones')
+        self.assert_player_status('SUBMIT_PHRASE', 'Bones')
         self.add_second_phrases_for_kirk_bones_and_spock()
         self.add_second_phrases_for_obrien_and_worf(game='NCC-1701')
-        self.assertPlayerStatus("SUBMIT_IMAGE", "Worf")
+        self.assert_player_status("SUBMIT_IMAGE", "Worf")
         self.add_second_images_for_kirk_bones_and_spock()
         self.add_second_images_for_obrien_and_worf(game='NCC-1701')
-        self.assertPlayersStatus(["Kirk", "Spock", "Bones", "Obrien", "Worf"], "SUBMIT_PHRASE")
+        self.assert_players_status(["Kirk", "Spock", "Bones", "Obrien", "Worf"], "SUBMIT_PHRASE")
         self.add_third_phrases_for_kirk_spock_bones_obrien_and_worf()
-        self.assertPlayersStatus(["Kirk", "Spock", "Bones", "Obrien", "Worf"], "GAME_OVER")
+        self.assert_players_status(["Kirk", "Spock", "Bones", "Obrien", "Worf"], "GAME_OVER")
 
-    def assertPlayersStatus(self, players, status):
+    # endregion
+
+    # region assertions
+
+    def assert_player_status(self, status_message="", username="", game="NCC-1701", prompt="", player_before="",
+                             player_after="", status_code=200):
+        response = self.app.get('/game/'+game+'/player/'+username)
+        self.assertEqual(response.status_code, status_code)
+        if (status_message):
+            self.assertEqual(response.get_json()['description'], status_message)
+        if (prompt):
+            self.assertEqual(response.get_json()['prompt'], prompt)
+        if (player_before):
+            self.assertEqual(response.get_json()['previousPlayerUsername'], player_before)
+        if (player_after):
+            self.assertEqual(response.get_json()['nextPlayerUsername'], player_after)
+
+    def assert_results_error(self, error, game="NCC-1701", status_code=400):
+        response = self.get_results(game)
+        self.assertEqual(response.status_code, status_code)
+        self.assertEqual(response.get_json()['error'], error)
+
+    def assert_post_image_error(self, username="", image="", game="", error="", status_code=400):
+        response = self.post_image(username, image, game)
+        self.assertEqual(response.status_code, status_code)
+        self.assertEqual(response.get_json()['error'],
+                         error)
+
+    def assert_players_status(self, players, status):
         for player in players:
-            self.assertPlayerStatus(status, player)
+            self.assert_player_status(status, player)
+
+    def assert_post_phrase_error(self, username="", phrase="", game="", error="", status_code=400):
+        response = self.post_phrase(username, phrase, game)
+        self.assertEqual(response.status_code, status_code)
+        self.assertEqual(response.get_json()['error'], error)
+
+    def assert_status_error(self, error_message="", username="", game=""):
+        url = ('/game/' + ((game + '/') if len(game) > 0 else "")) + ('player' + (('/' + username) if len(username) > 0 else ""))
+        response = self.app.get(url)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()['error'], error_message)
+
+    # endregion
+
+    # region testutil
 
     def add_images_for_obrien_and_worf(self, game='NCC-1701D'):
         self.post_image("Worf", "worf image", game)
@@ -476,24 +474,24 @@ class IntegrationTests(unittest.TestCase):
         self.post_phrase('Obrien', 'Darn Cardies', game)
         self.post_phrase('Worf', 'What is this prune juice?', game)
 
-    def add_obrien_and_worf(self, game='NCC-1701D'):
+    def add_players_obrien_and_worf(self, game='NCC-1701D'):
         self.app.post('/join', json={'username': 'Obrien', 'game': game})
         self.app.post('/join', json={'username': 'Worf', 'game': game})
 
-    def addKirkAndSpock(self):
+    def add_players_kirk_and_spock(self):
         self.app.post('/join', json={'username': 'Kirk', 'game': 'NCC-1701'})
         self.app.post('/join', json={'username': 'Spock', 'game': 'NCC-1701'})
 
-    def addKirkBonesAndSpock(self):
-        self.addKirkAndSpock()
+    def add_players_kirk_bones_and_spock(self):
+        self.add_players_kirk_and_spock()
         self.app.post('/join', json={'username': 'Bones', 'game': 'NCC-1701'})
 
-    def addPhrasesForKirkAndSpock(self):
+    def add_phrases_for_kirk_and_spock(self):
         self.post_phrase('Kirk', 'Ever dance with the devil in the pale moonlight?')
         self.post_phrase('Spock', 'The devil went down to Georgia.')
 
-    def addPhrasesForKirkBonesAndSpock(self):
-        self.addPhrasesForKirkAndSpock()
+    def add_phrases_for_kirk_bones_and_spock(self):
+        self.add_phrases_for_kirk_and_spock()
         self.post_phrase('Bones', 'That is devilishly clever.')
 
     def add_second_phrases_for_kirk_bones_and_spock(self):
@@ -501,12 +499,12 @@ class IntegrationTests(unittest.TestCase):
         self.post_phrase('Bones', 'Bones phrase 2')
         self.post_phrase('Kirk', 'Kirk phrase 2')
 
-    def addImagesForKirkAndSpock(self):
+    def add_images_for_kirk_and_spock(self):
         self.post_image("Kirk", "kirk image")
         self.post_image("Spock", "spock image")
 
-    def addImagesForKirkBonesAndSpock(self):
-        self.addImagesForKirkAndSpock()
+    def add_images_for_kirk_bones_and_spock(self):
+        self.add_images_for_kirk_and_spock()
         self.post_image("Bones", "bones image")
 
     def add_second_images_for_kirk_bones_and_spock(self):
@@ -520,3 +518,17 @@ class IntegrationTests(unittest.TestCase):
         self.post_phrase('Kirk', 'Kirk phrase 3')
         self.post_phrase('Obrien', 'Obrien phrase 3')
         self.post_phrase('Worf', 'Worf phrase 3')
+
+    def post_image(self, username="", image="", game="NCC-1701"):
+        return self.app.post('/image', json={'username': username, 'image': image, 'game': game})
+
+    def post_phrase(self, username="", phrase="", game="NCC-1701"):
+        return self.app.post('/phrase', json={'username': username, 'phrase': phrase, 'game': game})
+
+    def get_results(self, game="NCC-1701"):
+        if game:
+            return self.app.get("/game/" + game + "/results")
+        else:
+            return self.app.get("/game/results")
+
+    # endregion
