@@ -1,6 +1,5 @@
 import React, {useState} from "react";
 import DrawingToolSuggestionPanel from "../helpercomponents/DrawingToolSuggestionPanel";
-import {FileInput, FilenameFileDisplay} from "@fordlabs/caffeinated-components";
 
 export default function ImageForm(props) {
     const drawingToolUrls = ["https://jspaint.app", "https://www.piskelapp.com", "https://pixlr.com/", "https://www.getpaint.net/"];
@@ -26,8 +25,10 @@ export default function ImageForm(props) {
             <h2>Draw this phrase (from {props.previousUsername}): "{props.phrase}"</h2>
             <form>
                 <div>Your Drawing (that will go to {props.nextUsername}):</div>
-                <FileInput onFileSelected={handleChange} labelContent={!image ? <>"Choose a file..."</> :
-                    <FilenameFileDisplay file={image}/>}/>
+                <label htmlFor={"image-input"}>
+                    <div className={"image-input-facade"}>{image ? image.name : "Choose a file..."}</div>
+                </label>
+                <input type="file" accept="image/*" id="image-input" onChange={handleChange} hidden/>
                 <button onClick={handleSubmit}>SUBMIT</button>
             </form>
             <DrawingToolSuggestionPanel toolUrls={drawingToolUrls}/>
